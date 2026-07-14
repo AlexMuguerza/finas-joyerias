@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "animate-pro": {
+      "source": "yuniorglez/gemini-elite-core",
+      "sourceType": "github",
+      "skillPath": "skills/animate-pro/SKILL.md",
+      "computedHash": "29dffb053a7af490eca8753e60473f02bde1fe777d2f73146e6efa091612ac52"
+    },
+    "premium-frontend-design": {
+      "source": "kv0906/cc-skills",
+      "sourceType": "github",
+      "skillPath": "advanced-frontend-skill/SKILL.md",
+      "computedHash": "954f360f8e3c2c9ecc97857044ace2da990f519a4b4df8e2bd89c467bcf9273f"
+    },
+    "ui-designer": {
+      "source": "olehsvyrydov/ai-development-team",
+      "sourceType": "github",
+      "skillPath": "claude/skills/design/ui-designer/SKILL.md",
+      "computedHash": "7a2d4a27b8f479a72cb8c795cd9aa3fc18aa4ce40733e17c981faf006ff15b21"
+    }
+  }
+}
