@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Preloader } from "@/components/Preloader";
 import { Navbar } from "@/components/Navbar";
-import { HeroSection } from "@/components/HeroSection";
-import { CategoriesSection } from "@/components/CategoriesSection";
-import { LifestyleSection } from "@/components/LifestyleSection";
+import { Hero } from "@/components/Hero";
+import { Marquee } from "@/components/Marquee";
+import { Categories } from "@/components/Categories";
 import { FeaturedProducts } from "@/components/FeaturedProducts";
-import { BannerSection } from "@/components/BannerSection";
-import { BenefitsSection } from "@/components/BenefitsSection";
-import { ContactSection } from "@/components/ContactSection";
+import { Lifestyle } from "@/components/Lifestyle";
+import { BrandStory } from "@/components/BrandStory";
+import { CTA } from "@/components/CTA";
+import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 
 export default function Home() {
@@ -17,19 +19,26 @@ export default function Home() {
 
   return (
     <>
-      {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
-      
-      <main className={`min-h-screen bg-cream transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+      <AnimatePresence>
+        {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
+      </AnimatePresence>
+
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isLoading ? 0 : 1 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+      >
         <Navbar />
-        <HeroSection />
-        <CategoriesSection />
-        <LifestyleSection />
+        <Hero />
+        <Marquee />
+        <Categories />
         <FeaturedProducts />
-        <BannerSection />
-        <BenefitsSection />
-        <ContactSection />
+        <Lifestyle />
+        <BrandStory />
+        <CTA />
+        <Contact />
         <Footer />
-      </main>
+      </motion.main>
     </>
   );
 }

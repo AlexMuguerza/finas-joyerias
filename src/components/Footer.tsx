@@ -1,170 +1,191 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { ArrowUp } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
-import Logo from "@/assets/logo-sin-fondo.png";
+import logo from "@/assets/logo-sin-fondo.png";
 
 const footerLinks = {
-  productos: [
-    { label: "Collares", href: "#productos" },
-    { label: "Anillos", href: "#productos" },
-    { label: "Aretes", href: "#productos" },
-    { label: "Pulseras", href: "#productos" },
-    { label: "Sets", href: "#productos" },
+  Colecciones: [
+    { label: "Collares", href: "#" },
+    { label: "Anillos", href: "#" },
+    { label: "Aretes", href: "#" },
+    { label: "Pulseras", href: "#" },
+    { label: "Sets", href: "#" },
   ],
-  ayuda: [
-    { label: "Guía de Talles", href: "#" },
-    { label: "Cuidado de Joyas", href: "#" },
-    { label: "Envíos y Devoluciones", href: "#" },
-    { label: "Preguntas Frecuentes", href: "#" },
-  ],
-  empresa: [
-    { label: "Nuestra Historia", href: "#" },
+  Empresa: [
+    { label: "Nuestra Historia", href: "#nuestra-historia" },
+    { label: "Artesanos", href: "#" },
+    { label: "Materiales", href: "#" },
     { label: "Sostenibilidad", href: "#" },
-    { label: "Blog", href: "#" },
-    { label: "Trabaja con Nosotros", href: "#" },
+  ],
+  Ayuda: [
+    { label: "Guía de Tallas", href: "#" },
+    { label: "Cuidado de Joyas", href: "#" },
+    { label: "Envíos y Entregas", href: "#" },
+    { label: "Devoluciones", href: "#" },
+    { label: "FAQ", href: "#" },
   ],
 };
 
-const socialLinks = [
-  {
-    label: "Facebook",
-    href: "https://www.facebook.com/share/1AmYsLcZqq/",
-    icon: "M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z",
-  },
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com/finas.joyeria",
-    icon: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z",
-  },
-  {
-    label: "TikTok",
-    href: "https://www.tiktok.com/@finasjoyerias?_r=1&_t=ZS-980UenXhf7P",
-    icon: "M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z",
-  },
-];
+const InstagramIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.5"/>
+    <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.5"/>
+    <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+  </svg>
+);
+
+const FacebookIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18 2H15C13.6739 2 12.4021 2.52678 11.4645 3.46447C10.5268 4.40215 10 5.67392 10 7V10H7V14H10V22H14V14H17L18 10H14V7C14 6.73478 14.1054 6.48043 14.2929 6.29289C14.4804 6.10536 14.7348 6 15 6H18V2Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const TwitterIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 4L10.5 13.5L4 20H6L11.5 14.5L16 20H20L13.2 10L19.5 4H17.5L12.5 9L8 4H4Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const YoutubeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M22.54 6.42C22.4212 5.94541 22.1793 5.51057 21.8387 5.15941C21.498 4.80824 21.0708 4.55318 20.6 4.42C18.88 4 12 4 12 4C12 4 5.12 4 3.4 4.46C2.92925 4.55318 2.50198 4.80824 2.16135 5.15941C1.82072 5.51057 1.57879 5.94541 1.46 6.42C1.14521 8.18557 0.991227 9.97637 1 11.77C0.988687 13.5722 1.14266 15.3743 1.46 17.14C1.57879 17.6006 1.82072 18.0398 2.16135 18.3958C2.50198 18.7518 2.92925 19.0116 3.4 19.11C5.12 19.56 12 19.56 12 19.56C12 19.56 18.88 19.56 20.6 19.1C21.0708 18.9668 21.498 18.7118 21.8387 18.3606C22.1793 18.0094 22.4212 17.5746 22.54 17.1C22.8523 15.3422 23.0068 13.5601 23 11.77C23.0113 9.96757 22.8573 8.16428 22.54 6.42Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <polygon points="9.75,15.02 15.5,11.75 9.75,8.48" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
 
 export const Footer = () => {
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <footer className="bg-cream border-t border-border">
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-12 sm:py-16">
-        {/* Mobile First Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {/* Brand - Full width on mobile */}
-          <div className="sm:col-span-2 lg:col-span-1 mb-4 lg:mb-0">
-            <a href="#" className="inline-block mb-4 sm:mb-6">
-              <Image
-                src={Logo}
-                alt="Finas Joyería"
-                width={80}
-                height={72}
-                className="h-16 w-auto"
-              />
-            </a>
-            <p className="text-text-body text-sm leading-relaxed mb-4 sm:mb-6 max-w-xs">
-              Joyería exclusiva que trasciende el tiempo. Cada pieza cuenta una
-              historia única.
-            </p>
-
-            {/* Social Links */}
-            <div className="flex gap-3">
-              {socialLinks.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={social.label}
-                  className="w-10 h-10 bg-soft-pink rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all duration-300"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d={social.icon} />
-                  </svg>
-                </a>
-              ))}
+    <footer className="bg-foreground text-white relative">
+      {/* Newsletter Section */}
+      <div className="border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h3 className="font-heading text-3xl md:text-4xl font-light mb-4">
+                Únete a <span className="italic text-primary-light">Finas</span>
+              </h3>
+              <p className="font-body text-sm text-white/60 max-w-md">
+                Suscríbete para recibir primero nuestras nuevas colecciones,
+                ofertas exclusivas y consejos de estilo.
+              </p>
             </div>
-          </div>
-
-          {/* Productos */}
-          <div>
-            <h4 className="font-heading text-base sm:text-lg text-text-heading mb-3 sm:mb-4">
-              Productos
-            </h4>
-            <ul className="space-y-2 sm:space-y-3">
-              {footerLinks.productos.map((link) => (
-                <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-text-body hover:text-primary transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Ayuda */}
-          <div>
-            <h4 className="font-heading text-base sm:text-lg text-text-heading mb-3 sm:mb-4">
-              Ayuda
-            </h4>
-            <ul className="space-y-2 sm:space-y-3">
-              {footerLinks.ayuda.map((link) => (
-                <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-text-body hover:text-primary transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Empresa */}
-          <div>
-            <h4 className="font-heading text-base sm:text-lg text-text-heading mb-3 sm:mb-4">
-              Empresa
-            </h4>
-            <ul className="space-y-2 sm:space-y-3">
-              {footerLinks.empresa.map((link) => (
-                <li key={link.label}>
-                  <a
-                    href={link.href}
-                    className="text-sm text-text-body hover:text-primary transition-colors"
-                  >
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* Bottom Bar */}
-        <div className="mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-border">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
-            <p className="text-xs sm:text-sm text-text-body/60">
-              © 2026 Finas. Todos los derechos reservados.
-            </p>
-            <div className="flex gap-4 sm:gap-6">
-              <a
-                href="#"
-                className="text-xs sm:text-sm text-text-body/60 hover:text-primary transition-colors"
-              >
-                Política de Privacidad
-              </a>
-              <a
-                href="#"
-                className="text-xs sm:text-sm text-text-body/60 hover:text-primary transition-colors"
-              >
-                Términos y Condiciones
-              </a>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <input
+                type="email"
+                placeholder="Tu correo electrónico"
+                className="flex-1 px-6 py-4 bg-white/5 border border-white/10 text-white font-body text-sm placeholder:text-white/40 focus:outline-none focus:border-primary transition-colors duration-300"
+                aria-label="Correo electrónico para newsletter"
+              />
+              <button className="btn-premium whitespace-nowrap">
+                Suscribirme
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Main Footer Content */}
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
+          {/* Brand Column */}
+          <div className="lg:col-span-2">
+            <Link href="/" className="inline-block mb-6" aria-label="Finas Joyería - Inicio">
+              <Image
+                src={logo}
+                alt="Finas Joyería"
+                width={100}
+                height={40}
+                className="h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                style={{ width: "auto" }}
+              />
+            </Link>
+            <p className="font-body text-sm text-white/60 mb-8 max-w-sm leading-relaxed">
+              Joyería fina y exclusiva que cuenta historias. Cada pieza es
+              diseñada con pasión y creada con los materiales más finos del mundo.
+            </p>
+            {/* Social Links */}
+            <div className="flex items-center gap-4">
+              <a href="#" className="w-10 h-10 border border-white/20 flex items-center justify-center text-white/60 hover:bg-primary hover:border-primary hover:text-white transition-all duration-300" aria-label="Instagram">
+                <InstagramIcon />
+              </a>
+              <a href="#" className="w-10 h-10 border border-white/20 flex items-center justify-center text-white/60 hover:bg-primary hover:border-primary hover:text-white transition-all duration-300" aria-label="Facebook">
+                <FacebookIcon />
+              </a>
+              <a href="#" className="w-10 h-10 border border-white/20 flex items-center justify-center text-white/60 hover:bg-primary hover:border-primary hover:text-white transition-all duration-300" aria-label="Twitter">
+                <TwitterIcon />
+              </a>
+              <a href="#" className="w-10 h-10 border border-white/20 flex items-center justify-center text-white/60 hover:bg-primary hover:border-primary hover:text-white transition-all duration-300" aria-label="YouTube">
+                <YoutubeIcon />
+              </a>
+            </div>
+          </div>
+
+          {/* Link Columns */}
+          {Object.entries(footerLinks).map(([title, links]) => (
+            <div key={title}>
+              <h4 className="font-heading text-lg font-light mb-6">{title}</h4>
+              <ul className="space-y-3">
+                {links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="font-body text-sm text-white/50 hover:text-white transition-colors duration-300"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="font-body text-[11px] text-white/40">
+              © 2025 Finas Joyería. Todos los derechos reservados.
+            </p>
+            <div className="flex items-center gap-6">
+              <Link
+                href="#"
+                className="font-body text-[11px] text-white/40 hover:text-white/70 transition-colors duration-300"
+              >
+                Términos y Condiciones
+              </Link>
+              <Link
+                href="#"
+                className="font-body text-[11px] text-white/40 hover:text-white/70 transition-colors duration-300"
+              >
+                Política de Privacidad
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Scroll to Top Button */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        onClick={scrollToTop}
+        className="fixed bottom-8 right-8 w-12 h-12 bg-primary text-white flex items-center justify-center shadow-medium hover:bg-primary-hover transition-all duration-300 z-40 cursor-pointer"
+        aria-label="Volver arriba"
+        whileHover={{ y: -4 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <ArrowUp size={18} strokeWidth={1.5} />
+      </motion.button>
     </footer>
   );
 };
