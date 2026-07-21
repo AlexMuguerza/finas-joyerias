@@ -2,39 +2,21 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
+import collares from "@/assets/categorias/categroia-collares.jpg";
+import anillos from "@/assets/categorias/categoria-anillos.jpg";
+import aretes from "@/assets/categorias/categoria-aretes.jpg";
+import pulseras from "@/assets/categorias/categoria-pulseras.jpg";
+import sets from "@/assets/categorias/categoria-sets.png";
+import accesorios from "@/assets/categorias/categoria-accesorios.png";
 
-const categories = [
-  {
-    name: "Collares",
-    image: "/categorias/categroia-collares.jpg",
-    count: "24+ diseños",
-  },
-  {
-    name: "Anillos",
-    image: "/categorias/categoria-anillos.jpg",
-    count: "18+ diseños",
-  },
-  {
-    name: "Aretes",
-    image: "/categorias/categoria-aretes.jpg",
-    count: "32+ diseños",
-  },
-  {
-    name: "Pulseras",
-    image: "/categorias/categoria-pulseras.jpg",
-    count: "15+ diseños",
-  },
-  {
-    name: "Sets",
-    image: "/categorias/categoria-sets.png",
-    count: "12+ diseños",
-  },
-  {
-    name: "Accesorios",
-    image: "/categorias/categoria-accesorios.png",
-    count: "20+ diseños",
-  },
+const categories: { name: string; image: StaticImageData; count: string }[] = [
+  { name: "Collares", image: collares, count: "24+ diseños" },
+  { name: "Anillos", image: anillos, count: "18+ diseños" },
+  { name: "Aretes", image: aretes, count: "32+ diseños" },
+  { name: "Pulseras", image: pulseras, count: "15+ diseños" },
+  { name: "Sets", image: sets, count: "12+ diseños" },
+  { name: "Accesorios", image: accesorios, count: "20+ diseños" },
 ];
 
 export const Categories = () => {

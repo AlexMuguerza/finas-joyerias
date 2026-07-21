@@ -1,35 +1,29 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import Image from "next/image";
+import heroVertical from "@/assets/hero/hero-vertical.png";
 
 export const CTA = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-100px" });
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
-
-  const bgY = useTransform(scrollYProgress, [0, 1], [0, 40]);
 
   return (
     <section
       ref={containerRef}
       className="relative py-32 md:py-40 overflow-hidden"
     >
-      {/* Background Image with Parallax */}
-      <motion.div style={{ y: bgY }} className="absolute inset-0 -inset-y-[20%] will-change-transform">
+      {/* Background Image */}
+      <div className="absolute inset-0">
         <Image
-          src="/hero/hero-vertical.png"
+          src={heroVertical}
           alt="Joyería Finas - Exclusividad"
           fill
           className="object-cover object-center"
           sizes="100vw"
         />
-      </motion.div>
+      </div>
 
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/70" />

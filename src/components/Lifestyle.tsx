@@ -3,6 +3,9 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import Image from "next/image";
+import elegante from "@/assets/estilo_vida/estilo-vida-elegante.png";
+import natural from "@/assets/estilo_vida/estilo-vida-natural.jpg";
+import collar from "@/assets/productos/producto-collar-perla-clasica.png";
 
 export const Lifestyle = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,7 +43,7 @@ export const Lifestyle = () => {
             className="md:col-span-2 md:row-span-2 relative group overflow-hidden"
           >
             <Image
-              src="/estilo_vida/estilo-vida-elegante.png"
+              src={elegante}
               alt="Estilo de vida elegante con joyería Finas"
               fill
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
@@ -65,7 +68,7 @@ export const Lifestyle = () => {
             className="relative group overflow-hidden"
           >
             <Image
-              src="/estilo_vida/estilo-vida-natural.jpg"
+              src={natural}
               alt="Artesanía natural en joyería Finas"
               fill
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
@@ -104,7 +107,7 @@ export const Lifestyle = () => {
             className="relative group overflow-hidden"
           >
             <Image
-              src="/productos/producto-collar-perla-clasica.png"
+              src={collar}
               alt="Collar de perla clásica Finas"
               fill
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"

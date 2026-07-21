@@ -1,20 +1,14 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import Image from "next/image";
+import elegante from "@/assets/estilo_vida/estilo-vida-elegante.png";
+import natural from "@/assets/estilo_vida/estilo-vida-natural.jpg";
 
 export const BrandStory = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(containerRef, { once: true, margin: "-100px" });
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  });
-
-  const leftImageY = useTransform(scrollYProgress, [0, 1], [30, -30]);
-  const textY = useTransform(scrollYProgress, [0, 1], [20, -20]);
 
   return (
     <section
@@ -43,24 +37,21 @@ export const BrandStory = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           {/* Left Image */}
           <motion.div
-            style={{ y: leftImageY }}
-            className="lg:col-span-5 relative will-change-transform"
+            initial={{ opacity: 0, x: -40 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-5 relative"
           >
-            <motion.div
-              initial={{ opacity: 0, x: -40 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ delay: 0.3, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[3/4] overflow-hidden"
-            >
+            <div className="relative aspect-[3/4] overflow-hidden">
               <Image
-                src="/estilo_vida/estilo-vida-elegante.png"
+                src={elegante}
                 alt="Mujer elegante con joyería Finas"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 40vw"
               />
               <div className="absolute inset-4 border border-white/30 pointer-events-none" />
-            </motion.div>
+            </div>
 
             {/* Floating Stats */}
             <motion.div
@@ -82,42 +73,27 @@ export const BrandStory = () => {
 
           {/* Center Text */}
           <motion.div
-            style={{ y: textY }}
-            className="lg:col-span-4 text-center lg:text-left will-change-transform"
+            initial={{ opacity: 0, y: 40 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-4 text-center lg:text-left"
           >
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <h3 className="font-heading text-3xl md:text-4xl font-light text-heading mb-6 leading-tight">
-                Cada joya es una{' '}
-                <span className="italic text-primary">obra de arte</span>
-              </h3>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <p className="font-body text-sm text-text-body leading-relaxed mb-6">
-                En Finas, cada pieza nace de la pasi&oacute;n por la excelencia.
-                Nuestros artesanos combinan t&eacute;cnicas tradicionales con dise&ntilde;os
-                contempor&aacute;neos para crear joyas &uacute;nicas que trascienden el tiempo.
-              </p>
-              <p className="font-body text-sm text-text-body leading-relaxed mb-8">
-                Utilizamos solo los materiales más finos: oro de ley, diamantes certificados
-                y perlas naturales. Cada detalle cuenta una historia de dedicaci&oacute;n y arte.
-              </p>
-            </motion.div>
+            <h3 className="font-heading text-3xl md:text-4xl font-light text-heading mb-6 leading-tight">
+              Cada joya es una{' '}
+              <span className="italic text-primary">obra de arte</span>
+            </h3>
+            <p className="font-body text-sm text-text-body leading-relaxed mb-6">
+              En Finas, cada pieza nace de la pasi&oacute;n por la excelencia.
+              Nuestros artesanos combinan t&eacute;cnicas tradicionales con dise&ntilde;os
+              contempor&aacute;neos para crear joyas &uacute;nicas que trascienden el tiempo.
+            </p>
+            <p className="font-body text-sm text-text-body leading-relaxed mb-8">
+              Utilizamos solo los materiales más finos: oro de ley, diamantes certificados
+              y perlas naturales. Cada detalle cuenta una historia de dedicaci&oacute;n y arte.
+            </p>
 
             {/* Values */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.6, duration: 0.6 }}
-              className="grid grid-cols-2 gap-6"
-            >
+            <div className="grid grid-cols-2 gap-6">
               {[
                 { number: "500+", label: "Diseños Únicos" },
                 { number: "100%", label: "Materiales Nobles" },
@@ -133,27 +109,27 @@ export const BrandStory = () => {
                   </span>
                 </div>
               ))}
-            </motion.div>
+            </div>
           </motion.div>
 
           {/* Right Image */}
-          <div className="lg:col-span-3">
-            <motion.div
-              initial={{ opacity: 0, x: 40 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-              className="relative aspect-[2/3] overflow-hidden"
-            >
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className="lg:col-span-3"
+          >
+            <div className="relative aspect-[2/3] overflow-hidden">
               <Image
-                src="/estilo_vida/estilo-vida-natural.jpg"
+                src={natural}
                 alt="Artesana trabajando en taller Finas"
                 fill
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 25vw"
               />
               <div className="absolute inset-4 border border-white/30 pointer-events-none" />
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* Bottom Quote */}

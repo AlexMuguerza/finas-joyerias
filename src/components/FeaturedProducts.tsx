@@ -3,57 +3,28 @@
 import { useRef, useState } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { Heart, Eye } from "lucide-react";
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
+import anilloCompromiso from "@/assets/productos/producto-anillo-compromiso.png";
+import collarPerla from "@/assets/productos/producto-collar-perla-clasica.png";
+import aretesCascada from "@/assets/productos/producto-aretes-cascada-rosa.png";
+import pulseraCadena from "@/assets/productos/producto-pulsera-cadena-delicada.png";
+import setElegance from "@/assets/productos/producto-set-completo-elegance.png";
+import anilloSolitario from "@/assets/productos/producto-anillo-solitario-oro.jpg";
 
-const products = [
-  {
-    id: 1,
-    name: "Anillo Compromiso Eternity",
-    price: "S/ 4,850",
-    category: "Anillos",
-    image: "/productos/producto-anillo-compromiso.png",
-    badge: "Best Seller",
-  },
-  {
-    id: 2,
-    name: "Collar Perla Clásica",
-    price: "S/ 2,320",
-    category: "Collares",
-    image: "/productos/producto-collar-perla-clasica.png",
-    badge: null,
-  },
-  {
-    id: 3,
-    name: "Aretes Cascada Rosa",
-    price: "S/ 1,180",
-    category: "Aretes",
-    image: "/productos/producto-aretes-cascada-rosa.png",
-    badge: "Nuevo",
-  },
-  {
-    id: 4,
-    name: "Pulsera Cadena Delicada",
-    price: "S/ 1,650",
-    category: "Pulseras",
-    image: "/productos/producto-pulsera-cadena-delicada.png",
-    badge: null,
-  },
-  {
-    id: 5,
-    name: "Set Elegance Completo",
-    price: "S/ 6,990",
-    category: "Sets",
-    image: "/productos/producto-set-completo-elegance.png",
-    badge: "Exclusivo",
-  },
-  {
-    id: 6,
-    name: "Anillo Solitario Oro",
-    price: "S/ 3,450",
-    category: "Anillos",
-    image: "/productos/producto-anillo-solitario-oro.jpg",
-    badge: null,
-  },
+const products: {
+  id: number;
+  name: string;
+  price: string;
+  category: string;
+  image: StaticImageData;
+  badge: string | null;
+}[] = [
+  { id: 1, name: "Anillo Compromiso Eternity", price: "S/ 4,850", category: "Anillos", image: anilloCompromiso, badge: "Best Seller" },
+  { id: 2, name: "Collar Perla Clásica", price: "S/ 2,320", category: "Collares", image: collarPerla, badge: null },
+  { id: 3, name: "Aretes Cascada Rosa", price: "S/ 1,180", category: "Aretes", image: aretesCascada, badge: "Nuevo" },
+  { id: 4, name: "Pulsera Cadena Delicada", price: "S/ 1,650", category: "Pulseras", image: pulseraCadena, badge: null },
+  { id: 5, name: "Set Elegance Completo", price: "S/ 6,990", category: "Sets", image: setElegance, badge: "Exclusivo" },
+  { id: 6, name: "Anillo Solitario Oro", price: "S/ 3,450", category: "Anillos", image: anilloSolitario, badge: null },
 ];
 
 const filters = ["Todos", "Anillos", "Collares", "Aretes", "Pulseras", "Sets"];
