@@ -1,153 +1,209 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import { User, ShoppingBag, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X, Search, Heart, ShoppingBag } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
-import Logo from "@/assets/logo-sin-fondo.png";
+import logo from "@/assets/logo-sin-fondo.png";
 
 const navLinks = [
-  { label: "Inicio", href: "#inicio" },
-  { label: "Categorías", href: "#categorias" },
-  { label: "Productos", href: "#productos" },
-  { label: "Contacto", href: "#contacto" },
+  { href: "#inicio", label: "Inicio" },
+  { href: "#colecciones", label: "Colecciones" },
+  { href: "#productos", label: "Productos" },
+  { href: "#nuestra-historia", label: "Nuestra Historia" },
+  { href: "#contacto", label: "Contacto" },
 ];
 
-const NAV_OFFSET = 80;
-
 export const Navbar = () => {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("#inicio");
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+
+      const sections = navLinks.map((link) => link.href.replace("#", ""));
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = document.getElementById(sections[i]);
+        if (section) {
+          const rect = section.getBoundingClientRect();
+          if (rect.top <= 150) {
+            setActiveSection(`#${sections[i]}`);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleNavClick = useCallback(
-    (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-      e.preventDefault();
-      const id = href.replace("#", "");
-      const el = document.getElementById(id);
-      if (!el) return;
+  const scrollToSection = (href: string) => {
+    const sectionId = href.replace("#", "");
+    const section = document.getElementById(sectionId);
+    if (section) {
+      const offset = 0;
+      const elementPosition = section.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - offset;
 
-      const scrollToTarget = () => {
-        const top = el.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
-        window.scrollTo({ top, behavior: "smooth" });
-      };
-
-      if (mobileOpen) {
-        setMobileOpen(false);
-        // esperamos a que termine la animación de cierre (300ms) antes de scrollear
-        setTimeout(scrollToTarget, 320);
-      } else {
-        scrollToTarget();
-      }
-    },
-    [mobileOpen]
-  );
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+    setIsMobileMenuOpen(false);
+  };
 
   return (
-    <motion.nav
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-      style={scrolled ? {
-        background: "rgba(255, 255, 255, 0.4)",
-        backdropFilter: "blur(20px) saturate(180%)",
-        WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)",
-        borderBottom: "1px solid rgba(255,255,255,0.5)",
-      } : undefined}
-      className="fixed top-0 left-0 right-0 z-50 py-4 transition-[background,box-shadow] duration-300 ease-out"
-    >
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between">
+    <>
+      <motion.header
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+          isScrolled
+            ? "glass shadow-soft py-4"
+            : "bg-transparent py-6"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex items-center">
-            <Image
-              src={Logo}
-              alt="Finas Joyería"
-              width={60}
-              height={54}
-              className="h-12 w-auto"
-              style={{ width: "auto" }}
-              priority
-            />
-
-            Finas Joyería
-          </a>
+          <Link
+            href="/"
+            className="relative z-10"
+            aria-label="Finas Joyería - Inicio"
+          >
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Image
+                src={logo}
+                alt="Finas Joyería"
+                className="h-10 md:h-12 w-auto"
+              />
+            </motion.div>
+          </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <nav className="hidden lg:flex items-center gap-10" role="navigation" aria-label="Navegación principal">
             {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="text-sm font-medium text-text-body hover:text-primary transition-colors duration-300 relative group"
+              <button
+                key={link.href}
+                onClick={() => scrollToSection(link.href)}
+                className={`relative font-body text-[11px] font-medium tracking-[0.15em] uppercase transition-colors duration-300 cursor-pointer ${
+                  activeSection === link.href
+                    ? "text-primary"
+                    : "text-text-body hover:text-foreground"
+                }`}
+                aria-current={activeSection === link.href ? "page" : undefined}
               >
                 {link.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-primary transition-all duration-300 group-hover:w-full" />
-              </a>
+                {activeSection === link.href && (
+                  <motion.div
+                    layoutId="activeNav"
+                    className="absolute -bottom-1 left-0 right-0 h-px bg-primary"
+                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  />
+                )}
+              </button>
             ))}
-          </div>
+          </nav>
 
-          {/* Icons */}
-          <div className="flex items-center gap-3">
-            {/* <button
-              aria-label="Mi cuenta"
-              className="p-2 text-text-body hover:text-primary transition-colors duration-300"
+          {/* Desktop Actions */}
+          <div className="hidden lg:flex items-center gap-6">
+            <button
+              className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+              aria-label="Buscar"
             >
-              <User size={20} strokeWidth={1.5} />
+              <Search size={18} strokeWidth={1.5} />
             </button>
             <button
-              aria-label="Carrito de compras"
-              className="p-2 text-text-body hover:text-primary transition-colors duration-300 relative"
+              className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+              aria-label="Favoritos"
             >
-              <ShoppingBag size={20} strokeWidth={1.5} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[10px] rounded-full flex items-center justify-center">
+              <Heart size={18} strokeWidth={1.5} />
+            </button>
+            <button
+              className="relative text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+              aria-label="Carrito de compras"
+            >
+              <ShoppingBag size={18} strokeWidth={1.5} />
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[9px] font-medium rounded-full flex items-center justify-center">
                 0
               </span>
-            </button> */}
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden p-2 text-text-body"
-              aria-label="Toggle menu"
-              aria-expanded={mobileOpen}
-            >
-              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
-        </div>
 
-        {/* Mobile Menu */}
-        <motion.div
-          initial={false}
-          animate={{
-            height: mobileOpen ? "auto" : 0,
-            opacity: mobileOpen ? 1 : 0,
-          }}
-          transition={{ duration: 0.3 }}
-          className="md:hidden overflow-hidden"
-          aria-hidden={!mobileOpen}
-        >
-          <div className="py-6 space-y-4">
-            {navLinks.map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={(e) => handleNavClick(e, link.href)}
-                className="block text-sm font-medium text-text-body hover:text-primary transition-colors"
+          {/* Mobile Menu Button */}
+          <button
+            className="lg:hidden relative z-10 text-foreground cursor-pointer"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      </motion.header>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-40 bg-cream lg:hidden"
+          >
+            <nav className="flex flex-col items-center justify-center h-full gap-8" role="navigation" aria-label="Navegación móvil">
+              {navLinks.map((link, i) => (
+                <motion.button
+                  key={link.href}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ delay: i * 0.1, duration: 0.4 }}
+                  onClick={() => scrollToSection(link.href)}
+                  className="font-heading text-3xl text-foreground hover:text-primary transition-colors duration-300 cursor-pointer"
+                >
+                  {link.label}
+                </motion.button>
+              ))}
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="flex items-center gap-8 mt-8"
               >
-                {link.label}
-              </a>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-    </motion.nav>
+                <button
+                  className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+                  aria-label="Buscar"
+                >
+                  <Search size={20} strokeWidth={1.5} />
+                </button>
+                <button
+                  className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+                  aria-label="Favoritos"
+                >
+                  <Heart size={20} strokeWidth={1.5} />
+                </button>
+                <button
+                  className="relative text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+                  aria-label="Carrito de compras"
+                >
+                  <ShoppingBag size={20} strokeWidth={1.5} />
+                </button>
+              </motion.div>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };

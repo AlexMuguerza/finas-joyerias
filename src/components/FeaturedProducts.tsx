@@ -1,202 +1,227 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ShoppingBag, Heart } from "lucide-react";
-import { ImageWithSkeleton } from "./ui/ImageWithSkeleton";
-import CollarPerlaClasica from "@/assets/producto-collar-perla-clasica.png";
-import AnilloSolitarioOro from "@/assets/producto-anillo-solitario-oro.jpg";
-import PulseraCadenaDelicada from "@/assets/producto-pulsera-cadena-delicada.png";
-import AretesCascadaRosa from "@/assets/producto-aretes-cascada-rosa.png";
-import SetCompletoElegance from "@/assets/producto-set-completo-elegance.png";
-import CollarCordonDorado from "@/assets/producto-collar-cordon-dorado.png";
-import AnilloCompromisoDiamante from "@/assets/producto-anillo-compromiso.png";
-import AretesHojaDeOro from "@/assets/producto-aretes-hoja-oro.png";
+import { useRef, useState } from "react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
+import { Heart, Eye } from "lucide-react";
+import Image from "next/image";
 
 const products = [
   {
     id: 1,
-    name: "Collar Perla Clásica",
-    price: 189,
-    originalPrice: 229,
-    image: CollarPerlaClasica,
-    badge: "Nuevo",
+    name: "Anillo Compromiso Eternity",
+    price: "S/ 4,850",
+    category: "Anillos",
+    image: "/productos/producto-anillo-compromiso.png",
+    badge: "Best Seller",
   },
   {
     id: 2,
-    name: "Anillo Solitario Oro",
-    price: 349,
-    image: AnilloSolitarioOro,
+    name: "Collar Perla Clásica",
+    price: "S/ 2,320",
+    category: "Collares",
+    image: "/productos/producto-collar-perla-clasica.png",
     badge: null,
   },
   {
     id: 3,
     name: "Aretes Cascada Rosa",
-    price: 129,
-    image: AretesCascadaRosa,
-    badge: "Popular",
+    price: "S/ 1,180",
+    category: "Aretes",
+    image: "/productos/producto-aretes-cascada-rosa.png",
+    badge: "Nuevo",
   },
   {
     id: 4,
     name: "Pulsera Cadena Delicada",
-    price: 159,
-    image: PulseraCadenaDelicada,
+    price: "S/ 1,650",
+    category: "Pulseras",
+    image: "/productos/producto-pulsera-cadena-delicada.png",
     badge: null,
   },
   {
     id: 5,
-    name: "Set Completo Elegance",
-    price: 499,
-    originalPrice: 599,
-    image: SetCompletoElegance,
-    badge: "Oferta",
+    name: "Set Elegance Completo",
+    price: "S/ 6,990",
+    category: "Sets",
+    image: "/productos/producto-set-completo-elegance.png",
+    badge: "Exclusivo",
   },
   {
     id: 6,
-    name: "Collar Cordón Dorado",
-    price: 199,
-    image: CollarCordonDorado,
-    badge: null,
-  },
-  {
-    id: 7,
-    name: "Anillo Compromiso Diamante",
-    price: 899,
-    image: AnilloCompromisoDiamante,
-    badge: "Premium",
-  },
-  {
-    id: 8,
-    name: "Aretes Hoja de Oro",
-    price: 145,
-    image: AretesHojaDeOro,
+    name: "Anillo Solitario Oro",
+    price: "S/ 3,450",
+    category: "Anillos",
+    image: "/productos/producto-anillo-solitario-oro.jpg",
     badge: null,
   },
 ];
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 },
-  },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 30 },
-  show: { opacity: 1, y: 0 },
-};
+const filters = ["Todos", "Anillos", "Collares", "Aretes", "Pulseras", "Sets"];
 
 export const FeaturedProducts = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true, margin: "-100px" });
+  const [activeFilter, setActiveFilter] = useState("Todos");
+  const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
+
+  const filteredProducts =
+    activeFilter === "Todos"
+      ? products
+      : products.filter((p) => p.category === activeFilter);
+
   return (
-    <section id="productos" className="py-16 sm:py-20 lg:py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+    <section id="productos" className="section-padding bg-white">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8" ref={containerRef}>
         {/* Section Header */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-10 sm:mb-16"
+          initial={{ opacity: 0, y: 40 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="text-center mb-16"
         >
-          <p className="text-primary text-xs sm:text-sm font-medium tracking-widest uppercase mb-3 sm:mb-4">
-            Productos Destacados
-          </p>
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-text-heading mb-4">
-            Lo más deseado
+          <span className="font-body text-[10px] font-medium tracking-[0.3em] uppercase text-primary block mb-4">
+            Piezas Seleccionadas
+          </span>
+          <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-heading mb-6">
+            Nuestras <span className="italic text-primary">joyas</span> destacadas
           </h2>
-          <p className="text-text-body text-sm sm:text-base max-w-2xl mx-auto px-4">
-            Nuestras piezas más populares, seleccionadas por nuestro equipo de
-            expertos para ti.
-          </p>
+          <div className="w-16 h-px bg-gold mx-auto" />
         </motion.div>
 
-        {/* Products Grid - Mobile First */}
+        {/* Filters */}
         <motion.div
-          variants={container}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-50px" }}
-          className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.3, duration: 0.6 }}
+          className="flex flex-wrap items-center justify-center gap-4 mb-16"
         >
-          {products.map((product) => (
-            <motion.article
-              key={product.id}
-              variants={item}
-              className="group bg-white rounded-xl sm:rounded-2xl border border-border overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+          {filters.map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-6 py-2 font-body text-[11px] font-medium tracking-[0.15em] uppercase transition-all duration-300 cursor-pointer ${
+                activeFilter === filter
+                  ? "bg-primary text-white"
+                  : "bg-muted text-text-body hover:bg-soft-pink hover:text-foreground"
+              }`}
             >
-              {/* Image Container */}
-              <div className="relative aspect-square overflow-hidden bg-soft-pink/30">
-                <ImageWithSkeleton
-                  src={product.image}
-                  alt={product.name}
-                  fill
-                  className="object-cover group-hover:scale-110 transition-transform duration-500"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                />
-
-                {/* Badge */}
-                {product.badge && (
-                  <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 sm:px-3 py-1 bg-primary text-white text-[10px] sm:text-xs font-medium rounded-full z-20">
-                    {product.badge}
-                  </span>
-                )}
-
-                {/* Wishlist Button - Always visible on mobile */}
-                <button
-                  aria-label={`Agregar ${product.name} a favoritos`}
-                  className="absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 bg-white/90 rounded-full flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-300 hover:bg-primary hover:text-white z-20"
-                >
-                  <Heart size={14} />
-                </button>
-
-                {/* Quick Add - Always visible on mobile */}
-                <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 sm:translate-y-full sm:group-hover:translate-y-0 transition-transform duration-300 z-20">
-                  <button
-                    aria-label={`Agregar ${product.name} al carrito`}
-                    className="w-full py-2 sm:py-2.5 bg-primary text-white text-xs sm:text-sm font-medium rounded-lg flex items-center justify-center gap-1 sm:gap-2 hover:bg-primary-hover transition-colors"
-                  >
-                    <ShoppingBag size={14} />
-                    <span className="hidden sm:inline">Agregar</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-3 sm:p-4">
-                <h3 className="font-heading text-sm sm:text-base lg:text-lg text-text-heading mb-1 sm:mb-2 group-hover:text-primary transition-colors overflow-hidden text-ellipsis whitespace-nowrap">
-                  {product.name}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-base sm:text-lg font-semibold text-text-heading">
-                    S/. {product.price}
-                  </span>
-                  {product.originalPrice && (
-                    <span className="text-xs sm:text-sm text-text-body/50 line-through">
-                      S/. {product.originalPrice}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </motion.article>
+              {filter}
+            </button>
           ))}
         </motion.div>
+
+        {/* Products Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <AnimatePresence mode="popLayout">
+            {filteredProducts.map((product, index) => (
+              <motion.article
+                key={product.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.1,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="group relative"
+                onMouseEnter={() => setHoveredProduct(product.id)}
+                onMouseLeave={() => setHoveredProduct(null)}
+              >
+                {/* Image Container */}
+                <div className="relative aspect-square bg-soft-pink mb-5 overflow-hidden">
+                  <Image
+                    src={product.image}
+                    alt={`${product.name} - ${product.category} Finas Joyería`}
+                    fill
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
+
+                  {/* Badge */}
+                  {product.badge && (
+                    <div className="absolute top-4 left-4 px-3 py-1 bg-primary text-white font-body text-[9px] font-medium tracking-[0.15em] uppercase">
+                      {product.badge}
+                    </div>
+                  )}
+
+                  {/* Hover Actions */}
+                  <div className="absolute inset-0 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500">
+                    <motion.button
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={
+                        hoveredProduct === product.id
+                          ? { y: 0, opacity: 1 }
+                          : { y: 20, opacity: 0 }
+                      }
+                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      className="w-12 h-12 bg-white/95 flex items-center justify-center text-foreground hover:bg-white transition-colors duration-300 cursor-pointer"
+                      aria-label={`Ver detalles de ${product.name}`}
+                    >
+                      <Eye size={18} strokeWidth={1.5} />
+                    </motion.button>
+                    <motion.button
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={
+                        hoveredProduct === product.id
+                          ? { y: 0, opacity: 1 }
+                          : { y: 20, opacity: 0 }
+                      }
+                      transition={{
+                        duration: 0.3,
+                        delay: 0.05,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
+                      className="w-12 h-12 bg-white/95 flex items-center justify-center text-foreground hover:bg-white transition-colors duration-300 cursor-pointer"
+                      aria-label={`Agregar ${product.name} a favoritos`}
+                    >
+                      <Heart size={18} strokeWidth={1.5} />
+                    </motion.button>
+                  </div>
+
+                  {/* Quick View Bar */}
+                  <motion.div
+                    initial={{ y: "100%" }}
+                    animate={
+                      hoveredProduct === product.id ? { y: 0 } : { y: "100%" }
+                    }
+                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute bottom-0 left-0 right-0 bg-foreground text-white py-3 px-4"
+                  >
+                    <span className="font-body text-[10px] font-medium tracking-[0.15em] uppercase">
+                      Vista rápida
+                    </span>
+                  </motion.div>
+                </div>
+
+                {/* Product Info */}
+                <div className="text-center">
+                  <span className="font-body text-[10px] font-medium tracking-[0.2em] uppercase text-primary block mb-2">
+                    {product.category}
+                  </span>
+                  <h3 className="font-heading text-xl font-light text-heading mb-2 group-hover:text-primary transition-colors duration-300">
+                    {product.name}
+                  </h3>
+                  <p className="font-body text-base font-medium text-foreground">
+                    {product.price}
+                  </p>
+                </div>
+              </motion.article>
+            ))}
+          </AnimatePresence>
+        </div>
 
         {/* View All Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center mt-10 sm:mt-12"
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.8, duration: 0.6 }}
+          className="text-center mt-16"
         >
-          <a
-            href="https://wa.me/51962792303?text=Hola%2C%20me%20gustar%C3%ADa%20ver%20todos%20los%20productos%20disponibles"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 border-2 border-border text-text-heading text-sm font-medium rounded-full hover:border-primary hover:text-primary transition-all duration-300"
-          >
-            Ver todos los productos
-          </a>
+          <button className="btn-outline">
+            Ver Todo el Catálogo
+          </button>
         </motion.div>
       </div>
     </section>
