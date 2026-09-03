@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import logo from "@/assets/logo-sin-fondo.png";
 
 export const metadata: Metadata = {
   title: "Finas | Joyería Exclusiva y Elegante",
@@ -25,6 +24,12 @@ export const metadata: Metadata = {
   creator: "Finas Joyería",
   publisher: "Finas Joyería",
   metadataBase: new URL("https://finasjoyerias.zfd.app"),
+  alternates: {
+    canonical: "https://finasjoyerias.zfd.app",
+  },
+  icons: {
+    icon: "/logo-sin-fondo.ico",
+  },
   openGraph: {
     type: "website",
     locale: "es_PE",
@@ -35,7 +40,7 @@ export const metadata: Metadata = {
       "Descubre nuestra colección de joyería fina y exclusiva. Cada joya cuenta una historia. Haz que la tuya brille.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Finas Joyería - Colección Exclusiva",
@@ -47,7 +52,7 @@ export const metadata: Metadata = {
     title: "Finas | Joyería Exclusiva y Elegante",
     description:
       "Descubre nuestra colección de joyería fina y exclusiva. Cada joya cuenta una historia.",
-    images: ["/og-image.jpg"],
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -70,7 +75,6 @@ export default function RootLayout({
   return (
     <html lang="es" data-scroll-behavior="smooth" className={cn("antialiased")}>
       <head>
-        <link rel="image" href={logo.src} type="image/png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"

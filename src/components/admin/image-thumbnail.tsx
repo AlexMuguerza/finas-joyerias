@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ImageOffIcon } from "lucide-react";
 import {
 	Dialog,
 	DialogContent,
@@ -8,6 +9,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { RemoteImage } from "@/components/remote-image";
 
 export function ImageThumbnail({
 	src,
@@ -36,19 +38,28 @@ export function ImageThumbnail({
 				title="Ver imagen"
 				className="block overflow-hidden rounded-lg border transition-opacity hover:opacity-80"
 			>
-				{/* eslint-disable-next-line @next/next/no-img-element */}
-				<img src={src} alt={alt} className="h-10 w-10 object-cover" />
+				<RemoteImage
+					src={src}
+					alt={alt}
+					containerClassName="h-10 w-10"
+					fallback={
+						<div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
+							<ImageOffIcon className="h-4 w-4" strokeWidth={1.5} />
+						</div>
+					}
+				/>
 			</button>
 			<DialogContent className="sm:max-w-lg">
 				<DialogHeader>
 					<DialogTitle>{alt}</DialogTitle>
 					<DialogDescription>{description}</DialogDescription>
 				</DialogHeader>
-				{/* eslint-disable-next-line @next/next/no-img-element */}
-				<img
+				<RemoteImage
 					src={src}
 					alt={alt}
-					className="max-h-[70vh] w-full rounded-lg object-contain"
+					containerClassName="w-full"
+					imgClassName="max-h-[70vh] w-full rounded-lg object-contain"
+					eager
 				/>
 			</DialogContent>
 		</Dialog>

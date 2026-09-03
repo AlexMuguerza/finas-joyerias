@@ -20,6 +20,7 @@ import {
 	getCategoryUploadUrl,
 	updateCategory,
 } from "@/app/admin/actions";
+import { RemoteImage } from "@/components/remote-image";
 
 export interface CategoryDialogData {
 	id: string;
@@ -182,8 +183,16 @@ export function CategoryDialog({
 				</Button>
 			)}
 
-			<DialogContent className="sm:max-w-lg">
-				<DialogHeader>
+			<DialogContent
+				style={{
+					display: "flex",
+					flexDirection: "column",
+					gap: 0,
+					maxHeight: "calc(100dvh - 2rem)",
+				}}
+				className="overflow-hidden sm:max-w-lg"
+			>
+				<DialogHeader className="shrink-0 pb-3">
 					<DialogTitle>
 						{isEdit ? "Editar categoría" : "Nueva categoría"}
 					</DialogTitle>
@@ -194,7 +203,12 @@ export function CategoryDialog({
 					</DialogDescription>
 				</DialogHeader>
 
-				<form onSubmit={handleSubmit} className="grid gap-4">
+				{/* Área desplazable: el contenido largo nunca desborda el diálogo. */}
+				<form
+					id="category-dialog-form"
+					onSubmit={handleSubmit}
+					className="grid min-h-0 flex-1 content-start gap-4 overflow-y-auto pr-1"
+				>
 					<div className="grid gap-2">
 						<Label>Imagen</Label>
 						<div className="flex items-center gap-4">
@@ -204,27 +218,31 @@ export function CategoryDialog({
 								className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/50 transition-colors hover:bg-muted"
 							>
 								{preview ? (
-									// eslint-disable-next-line @next/next/no-img-element
-									<img
+									<RemoteImage
 										src={preview}
 										alt="Vista previa"
-										className="h-full w-full object-cover"
+										containerClassName="h-full w-full"
+										imgClassName="object-cover"
 									/>
 								) : (
 									<ImageIcon className="size-6 text-muted-foreground" />
 								)}
 							</button>
-							<div className="grid gap-1">
+							<div className="grid min-w-0 flex-1 gap-1">
 								<Button
 									type="button"
 									variant="outline"
 									size="sm"
 									onClick={() => fileInputRef.current?.click()}
+									className="justify-self-start"
 								>
 									<UploadIcon />
 									{isEdit ? "Cambiar imagen" : "Elegir imagen"}
 								</Button>
-								<p className="text-xs text-muted-foreground">
+								<p
+									className="truncate text-xs text-muted-foreground"
+									title={file?.name ?? undefined}
+								>
 									{file
 										? file.name
 										: isEdit
@@ -268,8 +286,14 @@ export function CategoryDialog({
 							id="description"
 							value={description}
 							onChange={(event) => setDescription(event.target.value)}
-							rows={3}
+							rows={5}
+							style={{ fieldSizing: "fixed" }}
+							className="resize-none"
 						/>
+						<p className="text-xs text-muted-foreground">
+							Máximo 5 líneas visibles; el contenido largo se desplaza dentro
+							del campo.
+						</p>
 					</div>
 
 					{error && (
@@ -277,26 +301,32 @@ export function CategoryDialog({
 							{error}
 						</p>
 					)}
-
-					<DialogFooter>
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							onClick={() => setOpen(false)}
-							disabled={pending}
-						>
-							Cancelar
-						</Button>
-						<Button type="submit" size="sm" disabled={pending}>
-							{pending
-								? "Subiendo…"
-								: isEdit
-									? "Guardar cambios"
-									: "Guardar"}
-						</Button>
-					</DialogFooter>
 				</form>
+
+				{/* Footer fijo fuera del área desplazable. */}
+				<DialogFooter className="mt-4 shrink-0">
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						onClick={() => setOpen(false)}
+						disabled={pending}
+					>
+						Cancelar
+					</Button>
+					<Button
+						type="submit"
+						form="category-dialog-form"
+						size="sm"
+						disabled={pending}
+					>
+						{pending
+							? "Subiendo…"
+							: isEdit
+								? "Guardar cambios"
+								: "Guardar"}
+					</Button>
+				</DialogFooter>
 			</DialogContent>
 		</Dialog>
 	);

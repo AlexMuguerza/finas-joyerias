@@ -1,200 +1,147 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import { Heart, Eye } from "lucide-react";
-import Image, { StaticImageData } from "next/image";
-import anilloCompromiso from "@/assets/productos/producto-anillo-compromiso.png";
-import collarPerla from "@/assets/productos/producto-collar-perla-clasica.png";
-import aretesCascada from "@/assets/productos/producto-aretes-cascada-rosa.png";
-import pulseraCadena from "@/assets/productos/producto-pulsera-cadena-delicada.png";
-import setElegance from "@/assets/productos/producto-set-completo-elegance.png";
-import anilloSolitario from "@/assets/productos/producto-anillo-solitario-oro.jpg";
+import Link from "next/link";
+import { formatPrice } from "@/lib/format";
+import { RemoteImage } from "@/components/remote-image";
+import type { ShopProduct } from "@/components/shop/product-card";
 
-const products: {
-  id: number;
-  name: string;
-  price: string;
-  category: string;
-  image: StaticImageData;
-  badge: string | null;
-}[] = [
-  { id: 1, name: "Anillo Compromiso Eternity", price: "S/ 4,850", category: "Anillos", image: anilloCompromiso, badge: "Best Seller" },
-  { id: 2, name: "Collar Perla Clásica", price: "S/ 2,320", category: "Collares", image: collarPerla, badge: null },
-  { id: 3, name: "Aretes Cascada Rosa", price: "S/ 1,180", category: "Aretes", image: aretesCascada, badge: "Nuevo" },
-  { id: 4, name: "Pulsera Cadena Delicada", price: "S/ 1,650", category: "Pulseras", image: pulseraCadena, badge: null },
-  { id: 5, name: "Set Elegance Completo", price: "S/ 6,990", category: "Sets", image: setElegance, badge: "Exclusivo" },
-  { id: 6, name: "Anillo Solitario Oro", price: "S/ 3,450", category: "Anillos", image: anilloSolitario, badge: null },
-];
+/**
+ * Sección "joyas destacadas" de la landing. Recibe 6 productos reales desde
+ * la BD (los más nuevos ≤ 7 días; si faltan, se completan con piezas
+ * aleatorias tratando de cubrir una por categoría). El botón de ojo enlaza
+ * al detalle /productos/<slug>.
+ */
+export const FeaturedProducts = ({ products }: { products: ShopProduct[] }) => {
+	const containerRef = useRef<HTMLDivElement>(null);
+	const isInView = useInView(containerRef, { once: true, margin: "-100px" });
 
-const filters = ["Todos", "Anillos", "Collares", "Aretes", "Pulseras", "Sets"];
+	return (
+		<section id="productos" className="section-padding bg-white">
+			<div className="max-w-7xl mx-auto px-6 lg:px-8" ref={containerRef}>
+				{/* Section Header */}
+				<motion.div
+					initial={{ opacity: 0, y: 40 }}
+					animate={isInView ? { opacity: 1, y: 0 } : {}}
+					transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+					className="text-center mb-16"
+				>
+					<span className="font-body text-[10px] font-medium tracking-[0.3em] uppercase text-primary block mb-4">
+						Piezas Seleccionadas
+					</span>
+					<h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-heading mb-6">
+						Nuestras <span className="italic text-primary">joyas</span> destacadas
+					</h2>
+					<div className="w-16 h-px bg-gold mx-auto" />
+				</motion.div>
 
-export const FeaturedProducts = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(containerRef, { once: true, margin: "-100px" });
-  const [activeFilter, setActiveFilter] = useState("Todos");
-  const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
+				{/* Products Grid */}
+				{products.length > 0 ? (
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+						{products.map((product, index) => (
+							<motion.article
+								key={product.id}
+								initial={{ opacity: 0, y: 40 }}
+								animate={isInView ? { opacity: 1, y: 0 } : {}}
+								transition={{
+									duration: 0.6,
+									delay: 0.1 + index * 0.08,
+									ease: [0.16, 1, 0.3, 1],
+								}}
+								className="group relative"
+							>
+								{/* Image Container */}
+								<div className="relative aspect-square bg-soft-pink mb-5 overflow-hidden">
+									{product.imageUrl ? (
+										<RemoteImage
+											src={product.imageUrl}
+											alt={`${product.name} - ${product.categoryName ?? "Finas Joyería"}`}
+											containerClassName="h-full w-full"
+											imgClassName="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+										/>
+									) : (
+										<div className="flex h-full w-full items-center justify-center text-xs tracking-widest text-muted-foreground uppercase">
+											Sin imagen
+										</div>
+									)}
 
-  const filteredProducts =
-    activeFilter === "Todos"
-      ? products
-      : products.filter((p) => p.category === activeFilter);
+									{/* Badge */}
+									{product.isNew && (
+										<div className="absolute top-4 left-4 px-3 py-1 bg-primary text-white font-body text-[9px] font-medium tracking-[0.15em] uppercase">
+											Nuevo
+										</div>
+									)}
 
-  return (
-    <section id="productos" className="section-padding bg-white">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8" ref={containerRef}>
-        {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-center mb-16"
-        >
-          <span className="font-body text-[10px] font-medium tracking-[0.3em] uppercase text-primary block mb-4">
-            Piezas Seleccionadas
-          </span>
-          <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-heading mb-6">
-            Nuestras <span className="italic text-primary">joyas</span> destacadas
-          </h2>
-          <div className="w-16 h-px bg-gold mx-auto" />
-        </motion.div>
+									{/* Hover Actions */}
+									<div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/0 opacity-0 group-hover:bg-black/15 group-hover:opacity-100 transition-all duration-500">
+										<Link
+											href={`/productos/${product.slug}`}
+											className="w-12 h-12 bg-white/95 flex items-center justify-center text-foreground hover:bg-white transition-colors duration-300 translate-y-4 group-hover:translate-y-0"
+											aria-label={`Ver ${product.name} en detalle`}
+										>
+											<Eye size={18} strokeWidth={1.5} />
+										</Link>
+										<button
+											type="button"
+											className="w-12 h-12 bg-white/95 flex items-center justify-center text-foreground hover:bg-white transition-colors duration-300 cursor-pointer translate-y-4 group-hover:translate-y-0"
+											aria-label={`Agregar ${product.name} a favoritos`}
+										>
+											<Heart size={18} strokeWidth={1.5} />
+										</button>
+									</div>
 
-        {/* Filters */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="flex flex-wrap items-center justify-center gap-4 mb-16"
-        >
-          {filters.map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`px-6 py-2 font-body text-[11px] font-medium tracking-[0.15em] uppercase transition-all duration-300 cursor-pointer ${
-                activeFilter === filter
-                  ? "bg-primary text-white"
-                  : "bg-muted text-text-body hover:bg-soft-pink hover:text-foreground"
-              }`}
-            >
-              {filter}
-            </button>
-          ))}
-        </motion.div>
+									{/* Quick View Bar */}
+									<div className="absolute bottom-0 left-0 right-0 bg-foreground text-white py-3 px-4 translate-y-full group-hover:translate-y-0 transition-transform duration-400">
+										<span className="font-body text-[10px] font-medium tracking-[0.15em] uppercase">
+											Vista rápida
+										</span>
+									</div>
+								</div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <AnimatePresence mode="popLayout">
-            {filteredProducts.map((product, index) => (
-              <motion.article
-                key={product.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{
-                  duration: 0.5,
-                  delay: index * 0.1,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-                className="group relative"
-                onMouseEnter={() => setHoveredProduct(product.id)}
-                onMouseLeave={() => setHoveredProduct(null)}
-              >
-                {/* Image Container */}
-                <div className="relative aspect-square bg-soft-pink mb-5 overflow-hidden">
-                  <Image
-                    src={product.image}
-                    alt={`${product.name} - ${product.category} Finas Joyería`}
-                    fill
-                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  />
+								{/* Product Info */}
+								<div className="text-center">
+									{product.categoryName && (
+										<span className="font-body text-[10px] font-medium tracking-[0.2em] uppercase text-primary block mb-2">
+											{product.categoryName}
+										</span>
+									)}
+									<h3 className="font-heading text-xl font-light text-heading mb-2 group-hover:text-primary transition-colors duration-300">
+										{product.name}
+									</h3>
+									<p className="font-body text-base font-medium text-foreground">
+										{formatPrice(product.price)}
+									</p>
+								</div>
+							</motion.article>
+						))}
+					</div>
+				) : (
+					<div className="mx-auto max-w-xl rounded-xl border border-dashed bg-muted/40 px-6 py-16 text-center">
+						<p className="font-heading text-2xl font-light text-heading">
+							Pronto nuevas piezas
+						</p>
+						<p className="mt-2 font-body text-sm text-muted-foreground">
+							Estamos creando joyas nuevas para ti. Vuelve en unos días.
+						</p>
+					</div>
+				)}
 
-                  {/* Badge */}
-                  {product.badge && (
-                    <div className="absolute top-4 left-4 px-3 py-1 bg-primary text-white font-body text-[9px] font-medium tracking-[0.15em] uppercase">
-                      {product.badge}
-                    </div>
-                  )}
-
-                  {/* Hover Actions */}
-                  <div className="absolute inset-0 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500">
-                    <motion.button
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={
-                        hoveredProduct === product.id
-                          ? { y: 0, opacity: 1 }
-                          : { y: 20, opacity: 0 }
-                      }
-                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                      className="w-12 h-12 bg-white/95 flex items-center justify-center text-foreground hover:bg-white transition-colors duration-300 cursor-pointer"
-                      aria-label={`Ver detalles de ${product.name}`}
-                    >
-                      <Eye size={18} strokeWidth={1.5} />
-                    </motion.button>
-                    <motion.button
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={
-                        hoveredProduct === product.id
-                          ? { y: 0, opacity: 1 }
-                          : { y: 20, opacity: 0 }
-                      }
-                      transition={{
-                        duration: 0.3,
-                        delay: 0.05,
-                        ease: [0.16, 1, 0.3, 1],
-                      }}
-                      className="w-12 h-12 bg-white/95 flex items-center justify-center text-foreground hover:bg-white transition-colors duration-300 cursor-pointer"
-                      aria-label={`Agregar ${product.name} a favoritos`}
-                    >
-                      <Heart size={18} strokeWidth={1.5} />
-                    </motion.button>
-                  </div>
-
-                  {/* Quick View Bar */}
-                  <motion.div
-                    initial={{ y: "100%" }}
-                    animate={
-                      hoveredProduct === product.id ? { y: 0 } : { y: "100%" }
-                    }
-                    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute bottom-0 left-0 right-0 bg-foreground text-white py-3 px-4"
-                  >
-                    <span className="font-body text-[10px] font-medium tracking-[0.15em] uppercase">
-                      Vista rápida
-                    </span>
-                  </motion.div>
-                </div>
-
-                {/* Product Info */}
-                <div className="text-center">
-                  <span className="font-body text-[10px] font-medium tracking-[0.2em] uppercase text-primary block mb-2">
-                    {product.category}
-                  </span>
-                  <h3 className="font-heading text-xl font-light text-heading mb-2 group-hover:text-primary transition-colors duration-300">
-                    {product.name}
-                  </h3>
-                  <p className="font-body text-base font-medium text-foreground">
-                    {product.price}
-                  </p>
-                </div>
-              </motion.article>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {/* View All Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.8, duration: 0.6 }}
-          className="text-center mt-16"
-        >
-          <button className="btn-outline">
-            Ver Todo el Catálogo
-          </button>
-        </motion.div>
-      </div>
-    </section>
-  );
+				{/* View All Button */}
+				{products.length > 0 && (
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={isInView ? { opacity: 1, y: 0 } : {}}
+						transition={{ delay: 0.8, duration: 0.6 }}
+						className="text-center mt-16"
+					>
+						<Link href="/shop" className="btn-outline inline-block">
+							Ver Todo el Catálogo
+						</Link>
+					</motion.div>
+				)}
+			</div>
+		</section>
+	);
 };

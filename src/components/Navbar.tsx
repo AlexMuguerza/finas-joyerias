@@ -22,6 +22,14 @@ export const Navbar = () => {
   const [activeSection, setActiveSection] = useState("#inicio");
 
   useEffect(() => {
+    // Bloquea el scroll del body cuando el menú móvil está abierto.
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
 
@@ -162,6 +170,14 @@ export const Navbar = () => {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-40 bg-cream lg:hidden"
           >
+            {/* Botón explícito para cerrar el menú móvil */}
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-6 right-6 cursor-pointer text-foreground transition-colors duration-300 hover:text-primary"
+              aria-label="Cerrar menú"
+            >
+              <X size={26} />
+            </button>
             <nav className="flex flex-col items-center justify-center h-full gap-8" role="navigation" aria-label="Navegación móvil">
               {navLinks.map((link, i) => (
                 <motion.button
@@ -176,7 +192,6 @@ export const Navbar = () => {
                   {link.label}
                 </motion.button>
               ))}
-
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

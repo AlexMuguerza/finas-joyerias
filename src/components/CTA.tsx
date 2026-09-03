@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import heroVertical from "@/assets/hero/hero-vertical.png";
 
 export const CTA = () => {
@@ -101,12 +102,15 @@ export const CTA = () => {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <button className="btn-premium">
+            <Link href="/#contacto" className="btn-premium">
               Solicitar Asesoría Personal
-            </button>
-            <button className="px-10 py-4 border border-white/30 text-white font-body text-[11px] font-medium tracking-[0.2em] uppercase hover:bg-white/10 transition-all duration-500 cursor-pointer">
+            </Link>
+            <Link
+              href="/shop"
+              className="px-10 py-4 border border-white/30 text-white font-body text-[11px] font-medium tracking-[0.2em] uppercase hover:bg-white/10 transition-all duration-500 cursor-pointer"
+            >
               Ver Catálogo Completo
-            </button>
+            </Link>
           </motion.div>
 
           {/* Trust Indicators */}

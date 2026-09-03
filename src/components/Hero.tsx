@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import Link from "next/link";
 import heroHorizontal from "@/assets/hero/hero-horizontal.png";
 import heroVertical from "@/assets/hero/hero-vertical.png";
 
@@ -137,17 +138,12 @@ export const Hero = () => {
             transition={{ delay: 1.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
-            <button
-              onClick={() => {
-                const el = document.getElementById("colecciones");
-                if (el) {
-                  el.scrollIntoView({ behavior: "smooth", block: "start" });
-                }
-              }}
-              className="px-10 py-4 bg-foreground text-white font-body text-[11px] font-medium tracking-[0.2em] uppercase hover:bg-foreground/90 transition-all duration-500 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer"
+            <Link
+              href="/categorias"
+              className="inline-flex items-center justify-center px-10 py-4 bg-foreground text-white font-body text-[11px] font-medium tracking-[0.2em] uppercase hover:bg-foreground/90 transition-all duration-500 hover:shadow-lg hover:-translate-y-0.5"
             >
               Explorar Colección
-            </button>
+            </Link>
             <button
               onClick={() => {
                 const el = document.getElementById("nuestra-historia");

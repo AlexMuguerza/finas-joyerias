@@ -62,12 +62,19 @@ export async function getPresignedUploadUrl(params: {
 }
 
 /**
- * True cuando corremos dentro del worker de Cloudflare (workerd).
- * En `next dev` (Node) `caches` no existe, así que ahí usamos el
- * fallback con firma S3 contra el bucket real.
+ * True si el entorno actual expone credenciales S3 del bucket remoto.
+ * En `next dev` (y previews locales de wrangler) vienen de `.dev.vars`;
+ * en el worker desplegado normalmente no están configuradas (ahí se usa
+ * el binding R2).
  */
-function isWorkerd(): boolean {
-	return typeof caches !== "undefined";
+function hasS3Credentials(): boolean {
+	const env = getCloudflareContext().env;
+	return Boolean(
+		env.CLOUDFLARE_ACCOUNT_ID &&
+			env.R2_ACCESS_KEY_ID &&
+			env.R2_SECRET_ACCESS_KEY &&
+			env.R2_BUCKET_NAME
+	);
 }
 
 const MIME_BY_EXTENSION: Record<string, string> = {
@@ -88,14 +95,16 @@ function contentTypeFromKey(key: string): string {
 /**
  * Trae el objeto desde R2 y lo devuelve como Response.
  *
- * En el worker (producción) usa el binding `R2` directamente:
- * `get()` devuelve `null` si el objeto no existe → 404, sin firmar nada.
- * En `next dev` el binding de Miniflare apunta a storage local (no al
- * bucket real), así que se firma la petición S3 como antes.
+ * El binding `R2` apunta al bucket real solo en el worker desplegado. En
+ * `next dev` (opennext dev proxy) y en previews locales, el binding es de
+ * Miniflare y apunta a storage local vacío — las imágenes se suben al bucket
+ * remoto con URLs prefirmadas. Por eso, si hay credenciales S3 disponibles
+ * (`.dev.vars`), se lee el bucket remoto con una petición firmada; el binding
+ * se usa únicamente cuando no hay credenciales (worker desplegado).
  */
 export async function fetchR2Object(key: string): Promise<Response> {
 	const bucket = getCloudflareContext().env.R2;
-	if (isWorkerd() && bucket) {
+	if (bucket && !hasS3Credentials()) {
 		const object = await bucket.get(key);
 		if (!object) {
 			return new Response("No encontrado", { status: 404 });
@@ -114,12 +123,13 @@ export async function fetchR2Object(key: string): Promise<Response> {
 
 /**
  * Elimina un objeto de R2 (mejor esfuerzo; usado para limpiar en caso de
- * error). Con binding en el worker usa `bucket.delete`; en dev firma la
- * petición S3.
+ * error). Misma lógica que `fetchR2Object`: binding solo en el worker
+ * desplegado (sin credenciales S3); en dev/preview se firma contra el
+ * bucket remoto, que es donde realmente se subió el objeto.
  */
 export async function deleteR2Object(key: string): Promise<void> {
 	const bucket = getCloudflareContext().env.R2;
-	if (isWorkerd() && bucket) {
+	if (bucket && !hasS3Credentials()) {
 		await bucket.delete(key);
 		return;
 	}
