@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
+// Debe coincidir con `advanced.cookiePrefix` de src/lib/auth.ts; si no, el
+// middleware nunca encuentra la cookie de sesión (busca "better-auth.session_token"
+// por defecto) y redirige al login en bucle aun con sesión válida.
+const COOKIE_PREFIX = "finas-joyeria";
+
 /**
  * Protege rutas privadas en el edge (sin tocar la BD): carrito y panel de
  * admin. El catálogo y /api/images son públicos.
@@ -17,7 +22,7 @@ import { getSessionCookie } from "better-auth/cookies";
  * tenga el rol correcto.
  */
 export function middleware(request: NextRequest) {
-	if (getSessionCookie(request)) {
+	if (getSessionCookie(request, { cookiePrefix: COOKIE_PREFIX })) {
 		return NextResponse.next();
 	}
 
