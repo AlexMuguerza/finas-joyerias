@@ -6,6 +6,7 @@ import { Menu, X, Search, Heart, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "@/assets/logo-sin-fondo.png";
+import { AccountNav } from "@/components/account-nav";
 
 const navLinks = [
   { href: "#inicio", label: "Inicio" },
@@ -19,6 +20,14 @@ export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("#inicio");
+
+  useEffect(() => {
+    // Bloquea el scroll del body cuando el menú móvil está abierto.
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -115,6 +124,7 @@ export const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-6">
+            <AccountNav />
             <button
               className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
               aria-label="Buscar"
@@ -160,6 +170,14 @@ export const Navbar = () => {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 z-40 bg-cream lg:hidden"
           >
+            {/* Botón explícito para cerrar el menú móvil */}
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="absolute top-6 right-6 cursor-pointer text-foreground transition-colors duration-300 hover:text-primary"
+              aria-label="Cerrar menú"
+            >
+              <X size={26} />
+            </button>
             <nav className="flex flex-col items-center justify-center h-full gap-8" role="navigation" aria-label="Navegación móvil">
               {navLinks.map((link, i) => (
                 <motion.button
@@ -174,31 +192,36 @@ export const Navbar = () => {
                   {link.label}
                 </motion.button>
               ))}
-
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="flex items-center gap-8 mt-8"
+                className="flex flex-col items-center gap-8"
               >
-                <button
-                  className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-                  aria-label="Buscar"
-                >
-                  <Search size={20} strokeWidth={1.5} />
-                </button>
-                <button
-                  className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-                  aria-label="Favoritos"
-                >
-                  <Heart size={20} strokeWidth={1.5} />
-                </button>
-                <button
-                  className="relative text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-                  aria-label="Carrito de compras"
-                >
-                  <ShoppingBag size={20} strokeWidth={1.5} />
-                </button>
+                <AccountNav
+                  variant="mobile"
+                  onNavigate={() => setIsMobileMenuOpen(false)}
+                />
+                <div className="flex items-center gap-8">
+                  <button
+                    className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+                    aria-label="Buscar"
+                  >
+                    <Search size={20} strokeWidth={1.5} />
+                  </button>
+                  <button
+                    className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+                    aria-label="Favoritos"
+                  >
+                    <Heart size={20} strokeWidth={1.5} />
+                  </button>
+                  <button
+                    className="relative text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+                    aria-label="Carrito de compras "
+                  >
+                    <ShoppingBag size={20} strokeWidth={1.5} />
+                  </button>
+                </div>
               </motion.div>
             </nav>
           </motion.div>

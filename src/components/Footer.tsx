@@ -8,24 +8,24 @@ import logo from "@/assets/logo-sin-fondo.png";
 
 const footerLinks = {
   Colecciones: [
-    { label: "Collares", href: "#" },
-    { label: "Anillos", href: "#" },
-    { label: "Aretes", href: "#" },
-    { label: "Pulseras", href: "#" },
-    { label: "Sets", href: "#" },
+    { label: "Collares", href: "/categorias" },
+    { label: "Anillos", href: "/categorias" },
+    { label: "Aretes", href: "/categorias" },
+    { label: "Pulseras", href: "/categorias" },
+    { label: "Sets", href: "/categorias" },
   ],
   Empresa: [
-    { label: "Nuestra Historia", href: "#nuestra-historia" },
-    { label: "Artesanos", href: "#" },
-    { label: "Materiales", href: "#" },
-    { label: "Sostenibilidad", href: "#" },
+    { label: "Nuestra Historia", href: "/#nuestra-historia" },
+    { label: "Ver Catálogo", href: "/shop" },
+    { label: "Contacto", href: "/#contacto" },
+    { label: "Materiales", href: "/#nuestra-historia" },
   ],
   Ayuda: [
-    { label: "Guía de Tallas", href: "#" },
-    { label: "Cuidado de Joyas", href: "#" },
-    { label: "Envíos y Entregas", href: "#" },
-    { label: "Devoluciones", href: "#" },
-    { label: "FAQ", href: "#" },
+    { label: "Guía de Tallas", href: "/#contacto" },
+    { label: "Cuidado de Joyas", href: "/#contacto" },
+    { label: "Envíos y Entregas", href: "/#contacto" },
+    { label: "Devoluciones", href: "/#contacto" },
+    { label: "FAQ", href: "/#contacto" },
   ],
 };
 

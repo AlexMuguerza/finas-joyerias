@@ -2,4 +2,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://finasjoyeria.com/sitemap.xml
+Sitemap: https://finasjoyerias.zfd.app/sitemap.xml
