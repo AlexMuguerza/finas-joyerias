@@ -5,13 +5,18 @@ import { getSessionCookie } from "better-auth/cookies";
  * Protege rutas privadas en el edge (sin tocar la BD): carrito y panel de
  * admin. El catálogo y /api/images son públicos.
  *
- * Nota: este chequeo es ligero (solo verifica que exista la cookie de
- * sesión). La validación real se hace en el servidor: el layout del panel
- * exige rol admin y cada server action usa `getUserSession()`/`getAdminSession()`
- * — una cookie presente no garantiza que la sesión siga siendo válida ni
- * que el usuario tenga el rol correcto.
+ * Nota: Next.js 16 ejecuta `proxy.ts` en runtime Node.js, que opennext-cloudflare
+ * no soporta todavía (exige Edge middleware). Por eso este archivo se llama
+ * `middleware.ts` (convención legacy que sigue corriendo en Edge) con el mismo
+ * comportamiento.
+ *
+ * Este chequeo es ligero (solo verifica que exista la cookie de sesión). La
+ * validación real se hace en el servidor: el layout del panel exige rol admin
+ * y cada server action usa `getUserSession()`/`getAdminSession()` — una cookie
+ * presente no garantiza que la sesión siga siendo válida ni que el usuario
+ * tenga el rol correcto.
  */
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
 	if (getSessionCookie(request)) {
 		return NextResponse.next();
 	}
