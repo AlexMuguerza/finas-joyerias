@@ -6,6 +6,7 @@ import { Menu, X, Search, Heart, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "@/assets/logo-sin-fondo.png";
+import { AccountNav } from "@/components/account-nav";
 
 const navLinks = [
   { href: "#inicio", label: "Inicio" },
@@ -115,6 +116,7 @@ export const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-6">
+            <AccountNav />
             <button
               className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
               aria-label="Buscar"
@@ -179,26 +181,32 @@ export const Navbar = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="flex items-center gap-8 mt-8"
+                className="flex flex-col items-center gap-8"
               >
-                <button
-                  className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-                  aria-label="Buscar"
-                >
-                  <Search size={20} strokeWidth={1.5} />
-                </button>
-                <button
-                  className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-                  aria-label="Favoritos"
-                >
-                  <Heart size={20} strokeWidth={1.5} />
-                </button>
-                <button
-                  className="relative text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-                  aria-label="Carrito de compras"
-                >
-                  <ShoppingBag size={20} strokeWidth={1.5} />
-                </button>
+                <AccountNav
+                  variant="mobile"
+                  onNavigate={() => setIsMobileMenuOpen(false)}
+                />
+                <div className="flex items-center gap-8">
+                  <button
+                    className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+                    aria-label="Buscar"
+                  >
+                    <Search size={20} strokeWidth={1.5} />
+                  </button>
+                  <button
+                    className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+                    aria-label="Favoritos"
+                  >
+                    <Heart size={20} strokeWidth={1.5} />
+                  </button>
+                  <button
+                    className="relative text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
+                    aria-label="Carrito de compras "
+                  >
+                    <ShoppingBag size={20} strokeWidth={1.5} />
+                  </button>
+                </div>
               </motion.div>
             </nav>
           </motion.div>

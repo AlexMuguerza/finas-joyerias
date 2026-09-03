@@ -7,3 +7,5 @@ allowBuilds:
   workerd: true
   sharp: true
   unrs-resolver: true
+  '@prisma/client': false
+  better-sqlite3: false

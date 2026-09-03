@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo-sin-fondo.png";
 
 export const metadata: Metadata = {
   title: "Finas | Joyería Exclusiva y Elegante",
@@ -23,11 +24,11 @@ export const metadata: Metadata = {
   authors: [{ name: "Finas Joyería" }],
   creator: "Finas Joyería",
   publisher: "Finas Joyería",
-  metadataBase: new URL("https://finasjoyeria.com"),
+  metadataBase: new URL("https://finasjoyerias.zfd.app"),
   openGraph: {
     type: "website",
     locale: "es_PE",
-    url: "https://finasjoyeria.com",
+    url: "https://finasjoyerias.zfd.app",
     siteName: "Finas Joyería",
     title: "Finas | Joyería Exclusiva y Elegante",
     description:
@@ -67,9 +68,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={cn("antialiased")}>
+    <html lang="es" data-scroll-behavior="smooth" className={cn("antialiased")}>
       <head>
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="image" href={logo.src} type="image/png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
