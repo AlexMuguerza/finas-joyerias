@@ -131,7 +131,7 @@ export default async function ShopPage({
 	return (
 		<>
 			{/* Header del catálogo */}
-			<section className="bg-cream pt-36 pb-10 md:pt-44">
+			<section className="bg-cream pt-20 pb-10 md:pt-36">
 				<div className="mx-auto max-w-7xl px-6 text-center lg:px-8">
 					<span className="mb-4 block font-body text-[10px] font-medium tracking-[0.3em] text-primary uppercase">
 						Joyería Fina
