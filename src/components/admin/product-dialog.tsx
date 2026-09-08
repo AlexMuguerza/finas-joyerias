@@ -40,6 +40,7 @@ export interface ProductDialogData {
 	slug: string;
 	description: string | null;
 	price: string;
+	sku: string | null;
 	categoryId: string;
 	imageKey: string | null;
 	imageUrl: string | null;
@@ -82,6 +83,7 @@ export function ProductDialog({
 	const [description, setDescription] = useState(product?.description ?? "");
 	const [price, setPrice] = useState(product?.price ?? "");
 	const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
+	const [sku, setSku] = useState(product?.sku ?? "");
 	const [error, setError] = useState<string | null>(null);
 	const [pending, startTransition] = useTransition();
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,6 +97,7 @@ export function ProductDialog({
 		setDescription(product?.description ?? "");
 		setPrice(product?.price ?? "");
 		setCategoryId(product?.categoryId ?? "");
+		setSku(product?.sku ?? "");
 		setError(null);
 	}
 
@@ -128,6 +131,11 @@ export function ProductDialog({
 			setError("Selecciona una categoría");
 			return;
 		}
+		const trimmedSku = sku.trim().toUpperCase();
+		if (isEdit && !/^[A-Z0-9]{3}-[A-Z0-9]{4}$/.test(trimmedSku)) {
+			setError("El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)");
+			return;
+		}
 		if (!isEdit && !file) {
 			setError("Selecciona una imagen");
 			return;
@@ -142,6 +150,7 @@ export function ProductDialog({
 			data.set("description", description);
 			data.set("price", trimmedPrice);
 			data.set("categoryId", categoryId);
+			if (trimmedSku) data.set("sku", trimmedSku);
 
 			// Si hay imagen nueva (o es creación): presign + subida directa.
 			if (file) {
@@ -230,8 +239,8 @@ export function ProductDialog({
 					</DialogTitle>
 					<DialogDescription>
 						{isEdit
-							? "La imagen se sube a R2 solo si eliges una nueva."
-							: "Selecciona una imagen y completa los datos. La imagen se sube directamente a R2."}
+							? "Puedes reemplazar la imagen y cambiar los datos del producto."
+							: "Selecciona una imagen y completa los datos."}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -322,10 +331,6 @@ export function ProductDialog({
 							style={{ fieldSizing: "fixed" }}
 							className="resize-none"
 						/>
-						<p className="text-xs text-muted-foreground">
-							Máximo 5 líneas visibles; el contenido largo se desplaza dentro
-							del campo.
-						</p>
 					</div>
 
 					<div className="grid grid-cols-2 gap-4">
@@ -345,7 +350,11 @@ export function ProductDialog({
 						<div className="grid gap-2">
 							<Label>Categoría *</Label>
 							<Select
-								value={categoryId}
+								items={categories.map((category) => ({
+									value: category.id,
+									label: category.name,
+								}))}
+								value={categoryId || null}
 								onValueChange={(value) => setCategoryId(value ?? "")}
 							>
 								<SelectTrigger className="w-full">
@@ -363,6 +372,20 @@ export function ProductDialog({
 									))}
 								</SelectContent>
 							</Select>
+						</div>
+
+						<div className="grid gap-2">
+							<Label htmlFor="sku">SKU</Label>
+							<Input
+								id="sku"
+								value={sku}
+								onChange={(event) => setSku(event.target.value.toUpperCase())}
+								maxLength={8}
+								placeholder={isEdit ? "AAA-9999" : "se genera solo si se deja vacío"}
+							/>
+							<p className="text-xs text-muted-foreground">
+								Formato AAA-9999, GEN AUTOMATICO.
+							</p>
 						</div>
 					</div>
 

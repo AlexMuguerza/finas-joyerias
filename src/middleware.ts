@@ -7,8 +7,10 @@ import { getSessionCookie } from "better-auth/cookies";
 const COOKIE_PREFIX = "finas-joyeria";
 
 /**
- * Protege rutas privadas en el edge (sin tocar la BD): carrito y panel de
- * admin. El catálogo y /api/images son públicos.
+ * Protege rutas privadas en el edge (sin tocar la BD): panel de admin y
+ * APIs de carrito (si en el futuro el carrito se sincroniza con el
+ * servidor). El catálogo, /api/images y /carrito (store local en
+ * localStorage) son públicos.
  *
  * Nota: Next.js 16 ejecuta `proxy.ts` en runtime Node.js, que opennext-cloudflare
  * no soporta todavía (exige Edge middleware). Por eso este archivo se llama
@@ -45,5 +47,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-	matcher: ["/admin/:path*", "/api/cart/:path*", "/carrito/:path*"],
+	matcher: ["/admin/:path*", "/api/cart/:path*"],
 };

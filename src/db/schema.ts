@@ -145,6 +145,8 @@ export const products = pgTable(
     slug: text("slug").notNull().unique(),
     description: text("description"),
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+    // SKU alfanumérico de 5 caracteres (ver `generateSku`), único.
+    sku: text("sku").unique(),
     categoryId: text("category_id")
       .notNull()
       .references(() => categories.id, { onDelete: "cascade" }),

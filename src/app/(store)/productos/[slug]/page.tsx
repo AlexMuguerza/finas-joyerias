@@ -6,6 +6,7 @@ import { getDb } from "@/lib/server/db";
 import { categories, images, products } from "@/db/schema";
 import { formatPrice } from "@/lib/format";
 import { ProductCard } from "@/components/shop/product-card";
+import { ProductActions } from "@/components/shop/product-actions";
 import { RemoteImage } from "@/components/remote-image";
 
 export const dynamic = "force-dynamic";
@@ -70,6 +71,7 @@ export default async function ProductPage({
 			slug: products.slug,
 			description: products.description,
 			price: products.price,
+			sku: products.sku,
 			categoryId: products.categoryId,
 			categoryName: categories.name,
 			categorySlug: categories.slug,
@@ -98,6 +100,7 @@ export default async function ProductPage({
 		name: products.name,
 		slug: products.slug,
 		price: products.price,
+		sku: products.sku,
 		categoryName: categories.name,
 		imageUrl: images.key,
 		imageAlt: images.altText,
@@ -137,6 +140,7 @@ export default async function ProductPage({
 		name: p.name,
 		slug: p.slug,
 		price: p.price,
+		sku: p.sku,
 		categoryName: p.categoryName,
 		imageUrl: p.imageUrl ? `/api/images/${p.imageUrl}` : null,
 		imageAlt: p.imageAlt,
@@ -248,6 +252,11 @@ export default async function ProductPage({
 						<h1 className="mb-4 font-heading text-4xl font-light text-heading md:text-5xl">
 							{product.name}
 						</h1>
+						{product.sku && (
+							<p className="mb-3 font-body text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
+								SKU: {product.sku}
+							</p>
+						)}
 						<p className="mb-8 font-body text-2xl font-medium text-foreground">
 							{formatPrice(product.price)}
 						</p>
@@ -258,21 +267,24 @@ export default async function ProductPage({
 							</div>
 						)}
 
-						{/* CTA */}
+						{/* CTA: carrito local + WhatsApp */}
 						<div className="flex flex-col gap-3">
-							<button
-								type="button"
-								disabled
-								title="El carrito estará disponible próximamente"
-								className="cursor-not-allowed bg-foreground px-10 py-4 font-body text-[11px] font-medium tracking-[0.2em] text-white uppercase opacity-50"
-							>
-								Agregar al carrito — Próximamente
-							</button>
+							<ProductActions
+								product={{
+									id: product.id,
+									name: product.name,
+									slug: product.slug,
+									sku: product.sku,
+									price: Number(product.price),
+									imageUrl,
+								}}
+								variant="detail"
+							/>
 							<Link
-								href="/shop"
+								href="/carrito"
 								className="px-10 py-4 text-center font-body text-[11px] font-medium tracking-[0.2em] text-foreground uppercase transition-colors duration-300 border border-foreground/40 hover:bg-foreground/5"
 							>
-								Ver catálogo completo
+								Ver carrito
 							</Link>
 						</div>
 					</div>
@@ -301,14 +313,14 @@ export default async function ProductPage({
 
 						{/* Escritorio: slide horizontal con snap. */}
 						<div
-							className="hidden snap-x snap-mandatory gap-6 overflow-x-auto pb-4 md:flex lg:gap-8 [scrollbar-width:thin]"
+							className="hidden snap-x snap-mandatory gap-6 overflow-x-auto pb-4 md:flex lg:gap-8 scrollbar-thin"
 							role="region"
 							aria-label="Productos relacionados, desliza horizontalmente"
 						>
 							{related.map((productCard) => (
 								<div
 									key={productCard.id}
-									className="w-[230px] flex-none snap-start lg:w-[260px]"
+									className="w-57.5 flex-none snap-start lg:w-65"
 								>
 									<ProductCard product={productCard} />
 								</div>

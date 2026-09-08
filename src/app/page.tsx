@@ -15,6 +15,7 @@ const PRODUCT_SELECT = {
 	name: products.name,
 	slug: products.slug,
 	price: products.price,
+	sku: products.sku,
 	categoryId: products.categoryId,
 	categoryName: categories.name,
 	imageKey: images.key,
@@ -27,6 +28,7 @@ type HomeProductRow = {
 	name: string;
 	slug: string;
 	price: string;
+	sku: string | null;
 	categoryId: string;
 	categoryName: string | null;
 	imageKey: string | null;
@@ -40,6 +42,7 @@ function toShopProduct(row: HomeProductRow, since: Date): ShopProduct {
 		name: row.name,
 		slug: row.slug,
 		price: String(row.price),
+		sku: row.sku,
 		categoryName: row.categoryName,
 		imageUrl: row.imageKey ? `/api/images/${row.imageKey}` : null,
 		imageAlt: row.imageAlt,

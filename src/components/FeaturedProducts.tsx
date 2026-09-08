@@ -2,10 +2,11 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Heart, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
 import { RemoteImage } from "@/components/remote-image";
+import { ProductActions } from "@/components/shop/product-actions";
 import type { ShopProduct } from "@/components/shop/product-card";
 
 /**
@@ -72,9 +73,7 @@ export const FeaturedProducts = ({ products }: { products: ShopProduct[] }) => {
 										<div className="absolute top-4 left-4 px-3 py-1 bg-primary text-white font-body text-[9px] font-medium tracking-[0.15em] uppercase">
 											Nuevo
 										</div>
-									)}
-
-									{/* Hover Actions */}
+									)}									{/* Hover Actions: ojo → detalle */}
 									<div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/0 opacity-0 group-hover:bg-black/15 group-hover:opacity-100 transition-all duration-500">
 										<Link
 											href={`/productos/${product.slug}`}
@@ -83,13 +82,6 @@ export const FeaturedProducts = ({ products }: { products: ShopProduct[] }) => {
 										>
 											<Eye size={18} strokeWidth={1.5} />
 										</Link>
-										<button
-											type="button"
-											className="w-12 h-12 bg-white/95 flex items-center justify-center text-foreground hover:bg-white transition-colors duration-300 cursor-pointer translate-y-4 group-hover:translate-y-0"
-											aria-label={`Agregar ${product.name} a favoritos`}
-										>
-											<Heart size={18} strokeWidth={1.5} />
-										</button>
 									</div>
 
 									{/* Quick View Bar */}
@@ -113,6 +105,21 @@ export const FeaturedProducts = ({ products }: { products: ShopProduct[] }) => {
 									<p className="font-body text-base font-medium text-foreground">
 										{formatPrice(product.price)}
 									</p>
+
+									{/* Acciones: carrito + WhatsApp, bajo el nombre/precio */}
+									<div className="mt-4 flex justify-center">
+										<ProductActions
+											product={{
+												id: product.id,
+												name: product.name,
+												slug: product.slug,
+												sku: product.sku ?? null,
+												price: Number(product.price),
+												imageUrl: product.imageUrl,
+											}}
+											variant="card"
+										/>
+									</div>
 								</div>
 							</motion.article>
 						))}

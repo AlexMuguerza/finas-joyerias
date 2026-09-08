@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import logo from "@/assets/logo-sin-fondo.png";
 import { AccountNav } from "@/components/account-nav";
+import { CartButton } from "@/components/cart-button";
 
 const navLinks = [
   { href: "#inicio", label: "Inicio" },
@@ -137,26 +138,21 @@ export const Navbar = () => {
             >
               <Heart size={18} strokeWidth={1.5} />
             </button>
-            <button
-              className="relative text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-              aria-label="Carrito de compras"
-            >
-              <ShoppingBag size={18} strokeWidth={1.5} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[9px] font-medium rounded-full flex items-center justify-center">
-                0
-              </span>
-            </button>
+            <CartButton />
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden relative z-10 text-foreground cursor-pointer"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
-            aria-expanded={isMobileMenuOpen}
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile Actions */}
+          <div className="lg:hidden flex items-center gap-4 relative z-10">
+            <button
+              className="text-foreground cursor-pointer"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+            <CartButton className="text-foreground" />
+          </div>
         </div>
       </motion.header>
 
@@ -215,12 +211,14 @@ export const Navbar = () => {
                   >
                     <Heart size={20} strokeWidth={1.5} />
                   </button>
-                  <button
+                  <Link
+                    href="/carrito"
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className="relative text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-                    aria-label="Carrito de compras "
+                    aria-label="Carrito de compras"
                   >
                     <ShoppingBag size={20} strokeWidth={1.5} />
-                  </button>
+                  </Link>
                 </div>
               </motion.div>
             </nav>

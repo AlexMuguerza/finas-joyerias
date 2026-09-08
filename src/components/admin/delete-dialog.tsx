@@ -17,7 +17,7 @@ export function DeleteDialog({
 	id,
 	title = "¿Eliminar?",
 	description = "Esta acción no se puede deshacer.",
-	confirmLabel = "Eliminar",
+	confirmLabel = "",
 	action,
 }: {
 	id: string;

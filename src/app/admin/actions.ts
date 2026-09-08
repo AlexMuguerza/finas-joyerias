@@ -13,6 +13,7 @@ import {
 	randomCode,
 } from "@/lib/server/r2";
 import { categories, images, products } from "@/db/schema";
+import { generateSku, isValidSku } from "@/lib/server/sku";
 
 export type AdminActionState = {
 	error?: string;
@@ -88,6 +89,35 @@ export async function getProductUploadUrl(
 	return createUploadUrl("products", name, slugInput, fileName, contentType);
 }
 
+const SKU_MAX_ATTEMPTS = 5;
+
+/**
+ * Genera un SKU único a partir del nombre de la categoría. Reintenta ante
+ * colisión (el constraint `products_sku_unique` es la fuente de verdad).
+ */
+async function generateAvailableSku(categoryId: string): Promise<string> {
+	const db = getDb();
+	const [category] = await db
+		.select({ name: categories.name })
+		.from(categories)
+		.where(eq(categories.id, categoryId))
+		.limit(1);
+	const categoryName = category?.name ?? "";
+
+	let lastError: unknown;
+	for (let attempt = 0; attempt < SKU_MAX_ATTEMPTS; attempt++) {
+		const sku = generateSku(categoryName);
+		const [taken] = await db
+			.select({ id: products.id })
+			.from(products)
+			.where(eq(products.sku, sku))
+			.limit(1);
+		if (!taken) return sku;
+		lastError = new Error(`SKU duplicado: ${sku}`);
+	}
+	throw lastError ?? new Error("No se pudo generar un SKU único");
+}
+
 /**
  * Si el registro se eliminó con imagen, borra la fila en `images` y el objeto
  * en R2. Mejor esfuerzo: los fallos de R2 no rompen la acción.
@@ -121,6 +151,8 @@ export async function createProduct(
 	const description = String(formData.get("description") ?? "").trim();
 	const price = String(formData.get("price") ?? "").trim();
 	const categoryId = String(formData.get("categoryId") ?? "").trim();
+	// SKU opcional: si no viene, se autogenera desde la categoría.
+	const skuInput = String(formData.get("sku") ?? "").trim().toUpperCase();
 	// Key de la imagen ya subida por el navegador con la URL prefirmada.
 	const imageKey = String(formData.get("imageKey") ?? "").trim();
 
@@ -129,6 +161,9 @@ export async function createProduct(
 		return { fieldErrors: { price: "Ingresa un precio válido" } };
 	}
 	if (!categoryId) return { fieldErrors: { categoryId: "Selecciona una categoría" } };
+	if (skuInput && !isValidSku(skuInput)) {
+		return { fieldErrors: { sku: "El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)" } };
+	}
 
 	const slug = slugify(slugInput || name);
 
@@ -154,13 +189,14 @@ export async function createProduct(
 			slug,
 			description: description || null,
 			price,
+			sku: skuInput || (await generateAvailableSku(categoryId)),
 			categoryId,
 			imageId,
 		});
 	} catch (error) {
 		if (imageId) await cleanupImage(imageId);
 		if (isUniqueViolation(error)) {
-			return { error: "Ya existe un producto con ese nombre o slug" };
+			return { error: "Ya existe un producto con ese nombre, slug o SKU" };
 		}
 		return { error: "No se pudo crear el producto" };
 	}
@@ -181,6 +217,8 @@ export async function updateProduct(
 	const description = String(formData.get("description") ?? "").trim();
 	const price = String(formData.get("price") ?? "").trim();
 	const categoryId = String(formData.get("categoryId") ?? "").trim();
+	// SKU editable; obligatorio en edición (todo producto ya tiene uno).
+	const sku = String(formData.get("sku") ?? "").trim().toUpperCase();
 	// Key de una imagen nueva ya subida por el navegador (solo si se reemplazó).
 	const imageKey = String(formData.get("imageKey") ?? "").trim();
 
@@ -190,6 +228,9 @@ export async function updateProduct(
 		return { fieldErrors: { price: "Ingresa un precio válido" } };
 	}
 	if (!categoryId) return { fieldErrors: { categoryId: "Selecciona una categoría" } };
+	if (!isValidSku(sku)) {
+		return { fieldErrors: { sku: "El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)" } };
+	}
 
 	const slug = slugify(slugInput || name);
 	const db = getDb();
@@ -223,6 +264,7 @@ export async function updateProduct(
 				slug,
 				description: description || null,
 				price,
+				sku,
 				categoryId,
 				imageId: newImageId ?? existing?.imageId ?? null,
 			})
@@ -230,7 +272,7 @@ export async function updateProduct(
 	} catch (error) {
 		if (newImageId) await cleanupImage(newImageId);
 		if (isUniqueViolation(error)) {
-			return { error: "Ya existe un producto con ese nombre o slug" };
+			return { error: "Ya existe un producto con ese nombre, slug o SKU" };
 		}
 		return { error: "No se pudo actualizar el producto" };
 	}

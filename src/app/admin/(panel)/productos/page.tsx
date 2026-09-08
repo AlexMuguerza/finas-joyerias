@@ -23,13 +23,13 @@ export default async function AdminProductsPage() {
 
 	const [rows, categoryOptions] = await Promise.all([
 		db
-			.select({
-				id: products.id,
-				name: products.name,
-				slug: products.slug,
-				description: products.description,
-				price: products.price,
-				categoryId: products.categoryId,
+			.select({					id: products.id,
+					name: products.name,
+					slug: products.slug,
+					description: products.description,
+					price: products.price,
+					sku: products.sku,
+					categoryId: products.categoryId,
 				categoryName: categories.name,
 				imageKey: images.key,
 				createdAt: products.createdAt,
@@ -71,6 +71,7 @@ export default async function AdminProductsPage() {
 							<TableRow>
 								<TableHead>Imagen</TableHead>
 								<TableHead>Nombre</TableHead>
+								<TableHead>SKU</TableHead>
 								<TableHead>Categoría</TableHead>
 								<TableHead>Precio</TableHead>
 								<TableHead>Creado</TableHead>
@@ -81,7 +82,7 @@ export default async function AdminProductsPage() {
 							{rowsWithImage.length === 0 ? (
 								<TableRow>
 									<TableCell
-										colSpan={6}
+										colSpan={7}
 										className="py-8 text-center text-muted-foreground"
 									>
 										Aún no hay productos. Crea el primero con el botón
@@ -104,6 +105,9 @@ export default async function AdminProductsPage() {
 												{row.slug}
 											</div>
 										</TableCell>
+										<TableCell className="font-mono text-xs">
+											{row.sku}
+										</TableCell>
 										<TableCell>{row.categoryName ?? "—"}</TableCell>
 										<TableCell>{formatPrice(row.price)}</TableCell>
 										<TableCell>{formatDate(row.createdAt)}</TableCell>
@@ -111,18 +115,19 @@ export default async function AdminProductsPage() {
 											<div className="flex items-center justify-end gap-1">
 												<ProductDialog
 													categories={categoryOptions}
-													product={{
-														id: row.id,
-														name: row.name,
-														slug: row.slug,
-														description: row.description,
-														price: row.price,
-														categoryId: row.categoryId,
+												product={{
+													id: row.id,
+													name: row.name,
+													slug: row.slug,
+													description: row.description,
+													price: row.price,
+													sku: row.sku,
+													categoryId: row.categoryId,
 														imageKey: row.imageKey,
 														imageUrl: row.imageUrl,
 													}}
 													trigger={{
-														label: "Editar",
+														label: "",
 														icon: "pencil",
 														variant: "ghost",
 														size: "sm",
