@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { getAuth } from "@/lib/auth";
+import { getUserSession } from "@/lib/server/session";
 import { resolvePostAuth } from "@/lib/auth-redirect";
 import { AuthForm } from "@/components/auth-form";
 
@@ -21,7 +20,7 @@ export default async function AuthLoginPage({
 }: {
 	searchParams: Promise<{ mode?: string; next?: string }>;
 }) {
-	const session = await getAuth().api.getSession({ headers: await headers() });
+	const session = await getUserSession();
 	const { mode, next } = await searchParams;
 
 	// Ya autenticado: no mostrar el formulario, enviar según rol.

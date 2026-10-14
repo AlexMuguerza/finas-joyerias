@@ -13,7 +13,6 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
-import { Toaster } from "@/components/ui/sonner";
 
 const NAV_ITEMS = [
 	{ href: "/admin", label: "Dashboard", icon: LayoutDashboardIcon },
@@ -127,7 +126,6 @@ export function AdminShell({
 				</header>
 				<main className="mx-auto w-full max-w-6xl p-4 md:p-8">{children}</main>
 			</div>
-			<Toaster />
 		</div>
 	);
 }

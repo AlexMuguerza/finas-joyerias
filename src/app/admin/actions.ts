@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 import { v7 } from "uuid";
 import { getAdminSession } from "@/lib/server/session";
 import { getDb } from "@/lib/server/db";
@@ -12,8 +12,9 @@ import {
 	makeObjectKey,
 	randomCode,
 } from "@/lib/server/r2";
-import { categories, images, products } from "@/db/schema";
+import { categories, images, products, user } from "@/db/schema";
 import { generateSku, isValidSku } from "@/lib/server/sku";
+import { EMPTY_SLUG_ERROR, resolveSlug } from "@/lib/slug";
 
 export type AdminActionState = {
 	error?: string;
@@ -22,18 +23,38 @@ export type AdminActionState = {
 
 const UNAUTHORIZED: AdminActionState = { error: "No autorizado" };
 
-function slugify(value: string): string {
-	return value
-		.toLowerCase()
-		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-+|-+$/g, "")
-		.slice(0, 120);
+/**
+ * Número total de administradores, contado en el servidor.
+ *
+ * `UsersTable` solo carga los primeros 100 usuarios, así que el cliente no
+ * puede decidir de forma fiable si el usuario que va a degradar es el último
+ * admin: con más de 100 cuentas vería "solo aparece uno" cuando en realidad
+ * hay más. El conteo real lo hace el servidor y se pasa como prop.
+ */
+export async function countAdminUsers(): Promise<number> {
+	if (!(await getAdminSession())) return 0;
+	const [row] = await getDb()
+		.select({ total: count() })
+		.from(user)
+		.where(eq(user.role, "admin"));
+	return row?.total ?? 0;
 }
 
 function isUniqueViolation(error: unknown): boolean {
 	return error instanceof Error && /duplicate key value|unique constraint/i.test(error.message);
+}
+
+/**
+ * ¿La violación de unicidad la provocó la columna `sku`?
+ *
+ * El mismo error salta por slug o nombre duplicados, y en ese caso reintentar
+ * con otro SKU no arregla nada: solo gasta los 5 intentos. Postgres incluye el
+ * constraint y la columna en el mensaje, así que se puede discriminar.
+ */
+function isSkuUniqueViolation(error: unknown): boolean {
+	if (!isUniqueViolation(error)) return false;
+	const message = (error as Error).message.toLowerCase();
+	return message.includes("sku");
 }
 
 export type PresignResult =
@@ -60,7 +81,11 @@ async function createUploadUrl(
 		return { error: "El archivo debe ser una imagen" };
 	}
 
-	const slug = slugify(slugInput || name);
+	const slug = resolveSlug(name, slugInput);
+	if (!slug) {
+		return { error: EMPTY_SLUG_ERROR };
+	}
+
 	const key = makeObjectKey(prefix, slug, randomCode(4), fileName);
 	try {
 		const presignedUrl = await getPresignedUploadUrl({ key });
@@ -92,8 +117,10 @@ export async function getProductUploadUrl(
 const SKU_MAX_ATTEMPTS = 5;
 
 /**
- * Genera un SKU único a partir del nombre de la categoría. Reintenta ante
- * colisión (el constraint `products_sku_unique` es la fuente de verdad).
+ * Genera un SKU candidato a partir del nombre de la categoría.
+ *
+ * Esto es solo una optimización para no gastar un reintento en el caso
+ * normal: la unicidad real la garantiza el constraint `products_sku_unique`.
  */
 async function generateAvailableSku(categoryId: string): Promise<string> {
 	const db = getDb();
@@ -116,6 +143,46 @@ async function generateAvailableSku(categoryId: string): Promise<string> {
 		lastError = new Error(`SKU duplicado: ${sku}`);
 	}
 	throw lastError ?? new Error("No se pudo generar un SKU único");
+}
+
+type ProductInsert = typeof products.$inferInsert;
+
+/**
+ * Inserta el producto. Si el SKU es autogenerado y choca con el constraint
+ * único, regenera y reintenta hasta `SKU_MAX_ATTEMPTS` veces.
+ *
+ * Esto es lo que hace real el contrato de `generateSku` ("quien llama debe
+ * reintentar con un nuevo SKU ante colisión"): antes, la colisión se traducía
+ * en un error de "Ya existe un producto con ese nombre, slug o SKU" que el
+ * admin no podía interpretar. No hace falta transacción porque cada INSERT
+ * fallido se revierte por completo y no deja estado parcial (patrón de
+ * concurrencia optimista: el constraint decide el ganador de cada carrera).
+ *
+ * Un SKU escrito a mano nunca se reintenta: si está duplicado, es un error
+ * real que hay que reportar tal cual.
+ */
+async function insertProductWithSkuRetry(
+	values: Omit<ProductInsert, "sku"> & { sku?: string | null }
+): Promise<void> {
+	const db = getDb();
+	const manualSku = values.sku ? values.sku : null;
+	const maxAttempts = manualSku ? 1 : SKU_MAX_ATTEMPTS;
+	let lastError: unknown;
+
+	for (let attempt = 0; attempt < maxAttempts; attempt++) {
+		const sku = manualSku ?? (await generateAvailableSku(values.categoryId));
+		try {
+			await db.insert(products).values({ ...values, sku });
+			return;
+		} catch (error) {
+			lastError = error;
+			if (manualSku || !isSkuUniqueViolation(error)) throw error;
+			console.warn(
+				`[sku] Colisión en "${sku}", reintentando (${attempt + 1}/${maxAttempts})`
+			);
+		}
+	}
+	throw lastError;
 }
 
 /**
@@ -165,7 +232,10 @@ export async function createProduct(
 		return { fieldErrors: { sku: "El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)" } };
 	}
 
-	const slug = slugify(slugInput || name);
+	const slug = resolveSlug(name, slugInput);
+	if (!slug) {
+		return { fieldErrors: { name: EMPTY_SLUG_ERROR } };
+	}
 
 	// 1) Registrar la imagen en `images` (la subida a R2 ya ocurrió).
 	let imageId: string | null = null;
@@ -183,13 +253,13 @@ export async function createProduct(
 
 	// 2) Crear el producto; si falla, deshacer todo (imagen en BD y en R2).
 	try {
-		await getDb().insert(products).values({
+		await insertProductWithSkuRetry({
 			id: v7(),
 			name,
 			slug,
 			description: description || null,
 			price,
-			sku: skuInput || (await generateAvailableSku(categoryId)),
+			sku: skuInput || null,
 			categoryId,
 			imageId,
 		});
@@ -228,18 +298,32 @@ export async function updateProduct(
 		return { fieldErrors: { price: "Ingresa un precio válido" } };
 	}
 	if (!categoryId) return { fieldErrors: { categoryId: "Selecciona una categoría" } };
-	if (!isValidSku(sku)) {
+	// El SKU solo se valida si viene informado: `products.sku` admite NULL
+	// (columna nullable) y hay registros previos a la migración que lo tienen.
+	// Si se envía vacío, se conserva el SKU ya generado en vez de fallar.
+	if (sku && !isValidSku(sku)) {
 		return { fieldErrors: { sku: "El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)" } };
 	}
 
-	const slug = slugify(slugInput || name);
+	const slug = resolveSlug(name, slugInput);
+	if (!slug) {
+		return { fieldErrors: { name: EMPTY_SLUG_ERROR } };
+	}
+
 	const db = getDb();
 
 	const [existing] = await db
-		.select({ imageId: products.imageId })
+		.select({ imageId: products.imageId, sku: products.sku })
 		.from(products)
 		.where(eq(products.id, id))
 		.limit(1);
+
+	// Sin `returning`, un UPDATE sobre un id inexistente no da error: afecta 0
+	// filas y la acción reportaba éxito. Con `returning` comprobamos que la
+	// fila realmente existía y existía antes de subir la imagen nueva.
+	if (!existing) {
+		return { error: "El producto ya no existe. Recarga la página." };
+	}
 
 	// 1) Si hay imagen nueva, registrarla en `images`.
 	let newImageId: string | null = null;
@@ -264,9 +348,9 @@ export async function updateProduct(
 				slug,
 				description: description || null,
 				price,
-				sku,
+				sku: sku || existing.sku,
 				categoryId,
-				imageId: newImageId ?? existing?.imageId ?? null,
+				imageId: newImageId ?? existing.imageId ?? null,
 			})
 			.where(eq(products.id, id));
 	} catch (error) {
@@ -278,7 +362,7 @@ export async function updateProduct(
 	}
 
 	// 3) Si se reemplazó la imagen, limpiar la anterior (registro + R2).
-	if (newImageId && existing?.imageId) {
+	if (newImageId && existing.imageId) {
 		await cleanupImage(existing.imageId);
 	}
 
@@ -319,7 +403,10 @@ export async function createCategory(
 
 	if (!name) return { fieldErrors: { name: "El nombre es obligatorio" } };
 
-	const slug = slugify(slugInput || name);
+	const slug = resolveSlug(name, slugInput);
+	if (!slug) {
+		return { fieldErrors: { name: EMPTY_SLUG_ERROR } };
+	}
 
 	// 1) Registrar la imagen en la tabla `images` (la subida a R2 ya ocurrió).
 	let imageId: string | null = null;
@@ -372,7 +459,11 @@ export async function updateCategory(
 	if (!id) return { error: "Categoría inválida" };
 	if (!name) return { fieldErrors: { name: "El nombre es obligatorio" } };
 
-	const slug = slugify(slugInput || name);
+	const slug = resolveSlug(name, slugInput);
+	if (!slug) {
+		return { fieldErrors: { name: EMPTY_SLUG_ERROR } };
+	}
+
 	const db = getDb();
 
 	const [existing] = await db
@@ -380,6 +471,12 @@ export async function updateCategory(
 		.from(categories)
 		.where(eq(categories.id, id))
 		.limit(1);
+
+	// Ver `updateProduct`: un UPDATE sin `returning` sobre un id inexistente
+	// no falla, y la acción terminaba reportando un guardado exitoso.
+	if (!existing) {
+		return { error: "La categoría ya no existe. Recarga la página." };
+	}
 
 	// 1) Si hay imagen nueva, registrarla en `images`.
 	let newImageId: string | null = null;
@@ -403,7 +500,7 @@ export async function updateCategory(
 				name,
 				slug,
 				description: description || null,
-				imageId: newImageId ?? existing?.imageId ?? null,
+				imageId: newImageId ?? existing.imageId ?? null,
 			})
 			.where(eq(categories.id, id));
 	} catch (error) {
@@ -415,7 +512,7 @@ export async function updateCategory(
 	}
 
 	// 3) Si se reemplazó la imagen, limpiar la anterior (registro + R2).
-	if (newImageId && existing?.imageId) {
+	if (newImageId && existing.imageId) {
 		await cleanupImage(existing.imageId);
 	}
 

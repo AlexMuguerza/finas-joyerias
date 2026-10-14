@@ -132,7 +132,10 @@ export function ProductDialog({
 			return;
 		}
 		const trimmedSku = sku.trim().toUpperCase();
-		if (isEdit && !/^[A-Z0-9]{3}-[A-Z0-9]{4}$/.test(trimmedSku)) {
+		// Solo se valida si viene informado: `products.sku` admite NULL y hay
+		// registros previos a la migración que lo tienen vacío. Si se deja en
+		// blanco, el servidor conserva el SKU existente.
+		if (trimmedSku && !/^[A-Z0-9]{3}-[A-Z0-9]{4}$/.test(trimmedSku)) {
 			setError("El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)");
 			return;
 		}
@@ -376,16 +379,17 @@ export function ProductDialog({
 
 						<div className="grid gap-2">
 							<Label htmlFor="sku">SKU</Label>
-							<Input
-								id="sku"
-								value={sku}
-								onChange={(event) => setSku(event.target.value.toUpperCase())}
-								maxLength={8}
-								placeholder={isEdit ? "AAA-9999" : "se genera solo si se deja vacío"}
-							/>
-							<p className="text-xs text-muted-foreground">
-								Formato AAA-9999, GEN AUTOMATICO.
-							</p>
+<Input
+							id="sku"
+							value={sku}
+							onChange={(event) => setSku(event.target.value.toUpperCase())}
+							maxLength={8}
+							placeholder={isEdit ? "AAA-9999" : "se genera solo si se deja vacío"}
+						/>
+						<p className="text-xs text-muted-foreground">
+							Formato AAA-9999. Si lo dejas vacío se genera o se conserva
+							el actual.
+						</p>
 						</div>
 					</div>
 

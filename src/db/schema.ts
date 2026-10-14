@@ -145,7 +145,9 @@ export const products = pgTable(
     slug: text("slug").notNull().unique(),
     description: text("description"),
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
-    // SKU alfanumérico de 5 caracteres (ver `generateSku`), único.
+    // SKU alfanumérico con formato `AAA-9999` (8 caracteres, ver `generateSku`).
+    // Nullable: las filas creadas antes de la migración 0001 no lo tienen.
+    // Único en BD (Postgres permite varios NULL en una columna UNIQUE).
     sku: text("sku").unique(),
     categoryId: text("category_id")
       .notNull()
