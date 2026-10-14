@@ -1,3 +1,6 @@
+// Solo servidor: depende de `getCloudflareContext()` y del cliente de Neon.
+import "server-only";
+
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { createDb, type Database } from "@/db";
 

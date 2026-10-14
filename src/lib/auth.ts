@@ -1,3 +1,9 @@
+// Solo servidor. `getAuth()` lee `getCloudflareContext()` y arrastra el
+// cliente de BD y better-auth; importado desde un Client Component compila sin
+// errores pero mete varios MB en el bundle del navegador sin usarse. Este
+// import lo convierte en un fallo de build explícito.
+import "server-only";
+
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin } from "better-auth/plugins/admin";

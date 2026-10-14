@@ -1,3 +1,7 @@
+// Solo servidor: lee el binding R2 y las credenciales S3 del contexto de
+// Cloudflare, que no existen en el navegador.
+import "server-only";
+
 import { AwsClient } from "aws4fetch";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
