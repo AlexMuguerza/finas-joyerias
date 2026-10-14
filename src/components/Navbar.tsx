@@ -1,13 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Search, Heart, ShoppingBag } from "lucide-react";
+import { motion } from "framer-motion";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "@/assets/logo-sin-fondo.png";
 import { AccountNav } from "@/components/account-nav";
 import { CartButton } from "@/components/cart-button";
+import {
+	MobileNavAnchorLink,
+	MobileNavMenu,
+} from "@/components/mobile-nav-menu";
 
 const navLinks = [
   { href: "#inicio", label: "Inicio" },
@@ -17,18 +21,32 @@ const navLinks = [
   { href: "#contacto", label: "Contacto" },
 ];
 
+const DESKTOP_QUERY = "(min-width: 1024px)";
+
+/**
+ * Barra de navegación de la landing. Comparte el overlay móvil con la tienda a
+ * través de `MobileNavMenu`.
+ *
+ * Lo propio de esta barra son las anclas a secciones (`#colecciones`) con su
+ * resaltado por scroll-spy, la entrada animada con framer-motion y el fondo
+ * `glass` al hacer scroll.
+ *
+ * Antes el menú móvil llevaba su propio overlay, con dos consecuencias
+ * visibles: aparecía **el botón de cerrar duplicado** (este toggle cambiaba a
+ * "X" mientras el overlay tenía además su propio "X" en `top-6 right-6`, justo
+ * encima) y el orden de los botones quedaba invertido respecto a la tienda.
+ * El overlay manual además arrastraba los mismos fallos de móvil que el de la
+ * tienda: sin trampa de foco, sin Escape, sin `aria-modal`, con el scroll
+ * bloqueado sin liberarse al rotar a horizontal y con objetivos táctiles de
+ * 26px.
+ */
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("#inicio");
-
-  useEffect(() => {
-    // Bloquea el scroll del body cuando el menú móvil está abierto.
-    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isMobileMenuOpen]);
+  // El menú solo existe en la landing, así que no hace falta guardar la ruta
+  // para cerrarlo al navegar (como sí hacía falta en `ShopHeader`, que vive en
+  // varias páginas).
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,24 +65,35 @@ export const Navbar = () => {
       }
     };
 
+    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Cierra al cruzar a escritorio. El overlay es `lg:hidden`, así que al rotar
+  // el móvil o redimensionar la ventana el menú se volvería invisible pero el
+  // bloqueo de scroll seguiría activo: la página se quedaría sin poder
+  // desplazarse, sin ninguna pista visual de por qué.
+  useEffect(() => {
+    const query = window.matchMedia(DESKTOP_QUERY);
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setIsMobileMenuOpen(false);
+    };
+    query.addEventListener("change", handleChange);
+    return () => query.removeEventListener("change", handleChange);
   }, []);
 
   const scrollToSection = (href: string) => {
     const sectionId = href.replace("#", "");
     const section = document.getElementById(sectionId);
     if (section) {
-      const offset = 0;
-      const elementPosition = section.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.scrollY - offset;
-
       window.scrollTo({
-        top: offsetPosition,
+        top: section.getBoundingClientRect().top + window.scrollY,
         behavior: "smooth",
       });
     }
-    setIsMobileMenuOpen(false);
+    // El cierre del diálogo lo hace `MobileNavAnchorLink` (es un
+    // `Dialog.Close`); aquí solo falta el scroll.
   };
 
   return (
@@ -73,7 +102,7 @@ export const Navbar = () => {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-[background-color,box-shadow,padding] duration-300 ${
           isScrolled
             ? "glass shadow-soft py-4"
             : "bg-transparent py-6"
@@ -99,7 +128,11 @@ export const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-10" role="navigation" aria-label="Navegación principal">
+          <nav
+            className="hidden lg:flex items-center gap-10"
+            role="navigation"
+            aria-label="Navegación principal"
+          >
             {navLinks.map((link) => (
               <button
                 key={link.href}
@@ -126,105 +159,57 @@ export const Navbar = () => {
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-6">
             <AccountNav />
-            <button
-              className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-              aria-label="Buscar"
-            >
-              <Search size={18} strokeWidth={1.5} />
-            </button>
-            <button
-              className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-              aria-label="Favoritos"
-            >
-              <Heart size={18} strokeWidth={1.5} />
-            </button>
             <CartButton />
           </div>
 
-          {/* Mobile Actions */}
-          <div className="lg:hidden flex items-center gap-4 relative z-10">
+          {/* Mobile Actions. Mismo orden que la tienda: carrito y luego
+              hamburguesa. */}
+          <div className="lg:hidden flex items-center gap-2">
+            <CartButton className="text-foreground" />
             <button
-              className="text-foreground cursor-pointer"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              type="button"
+              className="flex h-11 w-11 cursor-pointer items-center justify-center text-foreground transition-colors duration-300 hover:text-primary"
+              onClick={() => setIsMobileMenuOpen(true)}
               aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
               aria-expanded={isMobileMenuOpen}
             >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {/* Solo hamburguesa: con el menú abierto el overlay (z-60) tapa
+                  el header, así que el estado "cerrando" nunca se ve. El
+                  cierre vive en el propio overlay. */}
+              <Menu size={24} />
             </button>
-            <CartButton className="text-foreground" />
           </div>
         </div>
       </motion.header>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-cream lg:hidden"
+      <MobileNavMenu
+        open={isMobileMenuOpen}
+        onOpenChange={setIsMobileMenuOpen}
+        label="Menú principal"
+        navLabel="Navegación móvil"
+      >
+        {navLinks.map((link, index) => (
+          <MobileNavAnchorLink
+            key={link.href}
+            index={index}
+            isActive={activeSection === link.href}
+            onSelect={() => scrollToSection(link.href)}
           >
-            {/* Botón explícito para cerrar el menú móvil */}
-            <button
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="absolute top-6 right-6 cursor-pointer text-foreground transition-colors duration-300 hover:text-primary"
-              aria-label="Cerrar menú"
-            >
-              <X size={26} />
-            </button>
-            <nav className="flex flex-col items-center justify-center h-full gap-8" role="navigation" aria-label="Navegación móvil">
-              {navLinks.map((link, i) => (
-                <motion.button
-                  key={link.href}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ delay: i * 0.1, duration: 0.4 }}
-                  onClick={() => scrollToSection(link.href)}
-                  className="font-heading text-3xl text-foreground hover:text-primary transition-colors duration-300 cursor-pointer"
-                >
-                  {link.label}
-                </motion.button>
-              ))}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="flex flex-col items-center gap-8"
-              >
-                <AccountNav
-                  variant="mobile"
-                  onNavigate={() => setIsMobileMenuOpen(false)}
-                />
-                <div className="flex items-center gap-8">
-                  <button
-                    className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-                    aria-label="Buscar"
-                  >
-                    <Search size={20} strokeWidth={1.5} />
-                  </button>
-                  <button
-                    className="text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-                    aria-label="Favoritos"
-                  >
-                    <Heart size={20} strokeWidth={1.5} />
-                  </button>
-                  <Link
-                    href="/carrito"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="relative text-text-body hover:text-foreground transition-colors duration-300 cursor-pointer"
-                    aria-label="Carrito de compras"
-                  >
-                    <ShoppingBag size={20} strokeWidth={1.5} />
-                  </Link>
-                </div>
-              </motion.div>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {link.label}
+          </MobileNavAnchorLink>
+        ))}
+
+        <div className="mt-6 flex flex-col items-center gap-6">
+          <AccountNav
+            variant="mobile"
+            onNavigate={() => setIsMobileMenuOpen(false)}
+          />
+          <CartButton
+            className="py-2 text-foreground"
+            onNavigate={() => setIsMobileMenuOpen(false)}
+          />
+        </div>
+      </MobileNavMenu>
     </>
   );
 };

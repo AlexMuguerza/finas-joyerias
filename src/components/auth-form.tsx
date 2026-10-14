@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { resolvePostAuth } from "@/lib/auth-redirect";
@@ -45,17 +45,17 @@ export function AuthForm({
 	next?: string;
 }) {
 	const router = useRouter();
-	const [mode, setMode] = useState<Mode>(initialMode === "register" ? "register" : "login");
 	const [error, setError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 
-	// Si la URL cambia (back/forward o deep link), sincroniza la pestaña activa.
-	useEffect(() => {
-		setMode(initialMode === "register" ? "register" : "login");
-	}, [initialMode]);
+	// La pestaña activa vive en la URL (`?mode=register`), no en estado local:
+	// así el deep link, el botón "atrás" y `switchMode` comparten una única
+	 // fuente de verdad. Antes se guardaba en `useState` + un efecto que la
+	// sincronizaba con la prop, lo que causaba un render de más y podía
+	// desincronizar la pestaña durante la navegación.
+	const mode: Mode = initialMode === "register" ? "register" : "login";
 
 	function switchMode(nextMode: Mode) {
-		setMode(nextMode);
 		setError(null);
 		const params = new URLSearchParams();
 		if (nextMode === "register") params.set("mode", "register");

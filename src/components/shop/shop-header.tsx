@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
-import { createPortal } from "react-dom";
+import { Menu } from "lucide-react";
 import logo from "@/assets/logo-sin-fondo.png";
 import { AccountNav } from "@/components/account-nav";
 import { CartButton } from "@/components/cart-button";
+import {
+	MobileNavLink,
+	MobileNavMenu,
+} from "@/components/mobile-nav-menu";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -18,23 +21,31 @@ const links = [
 	{ href: "/#contacto", label: "Contacto" },
 ];
 
+// `lg` es el breakpoint del `lg:hidden` del overlay: al cruzarlo hay que
+// cerrar el menú (ver el efecto de `matchMedia`).
+const DESKTOP_QUERY = "(min-width: 1024px)";
+
 /**
- * Barra de navegación de la tienda (/shop). Es una variante del Navbar de
- * la landing adaptada a rutas internas: usa Link en vez de scroll de anclas
- * y convive con rutas como /auth/login.
- *
- * El menú móvil se renderiza con createPortal en <body>: si vive dentro del
- * <header>, el `backdrop-blur` del header scrolleado se vuelve el containing
- * block del overlay `fixed inset-0` y el menú queda recortado al tamaño del
- * header (bug visible al scrollear y abrir el menú).
+ * Barra de navegación de la tienda (/shop). Comparte el overlay móvil con la
+ * landing a través de `MobileNavMenu`; lo propio de esta barra son los enlaces
+ * de ruta (no anclas), el resaltado de la sección activa y el fondo `glass` al
+ * hacer scroll.
  */
 export function ShopHeader() {
 	const pathname = usePathname();
 	const [isScrolled, setIsScrolled] = useState(false);
-	const [isMenuOpen, setIsMenuOpen] = useState(false);
-	const [isMounted, setIsMounted] = useState(false);
 
-	useEffect(() => setIsMounted(true), []);
+	// El estado de apertura se guarda junto a la ruta en la que se abrió y se
+	// *deriva* en el render. Al cambiar de ruta, `menuState.pathname` deja de
+	// coincidir y el menú se cierra solo, sin `useEffect` ni `setState` en un
+	// efecto (que provoca un render extra y además dispara la regla
+	// `react-hooks/set-state-in-effect`). Cubre lo que los `onClick` de cada
+	// enlace no capturan: navegación con teclado y "atrás"/"adelante" del
+	// navegador, que antes dejaban el menú y su bloqueo de scroll abiertos
+	// encima de la página nueva.
+	const [menuState, setMenuState] = useState({ pathname, open: false });
+	const isMenuOpen = menuState.pathname === pathname && menuState.open;
+	const setIsMenuOpen = (open: boolean) => setMenuState({ pathname, open });
 
 	useEffect(() => {
 		const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -43,66 +54,39 @@ export function ShopHeader() {
 		return () => window.removeEventListener("scroll", handleScroll);
 	}, []);
 
+	// Cierra al cruzar a escritorio. El overlay es `lg:hidden`, así que al
+	// rotar el móvil o redimensionar la ventana el menú se volvía invisible
+	// pero `modal` seguía bloqueando el scroll (y base-ui lo re-aplica en cada
+	// `resize`): la página quedaba sin poder desplazarse, sin ninguna pista
+	// visual de por qué.
 	useEffect(() => {
-		// Bloquea el scroll del body cuando el menú móvil está abierto.
-		document.body.style.overflow = isMenuOpen ? "hidden" : "";
-		return () => {
-			document.body.style.overflow = "";
+		const query = window.matchMedia(DESKTOP_QUERY);
+		const handleChange = (event: MediaQueryListEvent) => {
+			// Actualización funcional: no depende de `pathname` y por eso el
+			// efecto no necesita re-suscribirse en cada render.
+			if (event.matches) setMenuState((prev) => ({ ...prev, open: false }));
 		};
-	}, [isMenuOpen]);
+		query.addEventListener("change", handleChange);
+		return () => query.removeEventListener("change", handleChange);
+	}, []);
 
-	const isActive = (href: string) =>
-		href === "/shop" || href === "/categorias"
-			? pathname.startsWith(href)
-			: pathname === href;
-
-	const mobileMenu = isMounted && isMenuOpen ? createPortal(
-		<div className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-7 bg-cream lg:hidden">
-			{/* Botón explícito para cerrar el menú móvil */}
-			<button
-				onClick={() => setIsMenuOpen(false)}
-				className="absolute top-6 right-6 cursor-pointer text-foreground transition-colors duration-300 hover:text-primary"
-				aria-label="Cerrar menú"
-			>
-				<X size={26} />
-			</button>
-			{links.map((link) => (
-				<Link
-					key={link.href}
-					href={link.href}
-					onClick={() => setIsMenuOpen(false)}
-					className={cn(
-						"font-heading text-3xl transition-colors duration-300",
-						isActive(link.href)
-							? "text-primary"
-							: "text-foreground hover:text-primary"
-					)}
-				>
-					{link.label}
-				</Link>
-			))}
-			<div className="mt-4 flex flex-col items-center gap-8">
-				<AccountNav
-					variant="mobile"
-					onNavigate={() => setIsMenuOpen(false)}
-				/>
-				<Link
-					href="/carrito"
-					onClick={() => setIsMenuOpen(false)}
-					className="font-heading text-2xl text-foreground transition-colors duration-300 hover:text-primary"
-				>
-					Carrito
-				</Link>
-			</div>
-		</div>,
-		document.body
-	) : null;
+	const isActive = (href: string) => {
+		// Los enlaces con ancla (`/#contacto`) apuntan a la landing, no a una
+		// ruta de la tienda: comparar `pathname` con ellos nunca daba true
+		// (antes `pathname === "/#contacto"` era literalmente imposible), así
+		// que quedaban como enlaces inertes en el resaltado.
+		if (href.includes("#")) return false;
+		return href === "/" ? pathname === "/" : pathname.startsWith(href);
+	};
 
 	return (
 		<>
 			<header
 				className={cn(
-					"fixed top-0 right-0 left-0 z-50 transition-all duration-500",
+					"fixed top-0 right-0 left-0 z-50",
+					// `transition-all` animaba también `padding`, que provoca
+					// reflow en cada cruce del umbral de 50px al hacer scroll.
+					"transition-[background-color,box-shadow,padding] duration-300",
 					isScrolled
 						? "glass bg-background/80 py-3 shadow-soft backdrop-blur"
 						: "bg-transparent py-5"
@@ -126,6 +110,7 @@ export function ShopHeader() {
 							<Link
 								key={link.href}
 								href={link.href}
+								aria-current={isActive(link.href) ? "page" : undefined}
 								className={cn(
 									"font-body text-[11px] font-medium tracking-[0.15em] uppercase transition-colors duration-300",
 									isActive(link.href)
@@ -144,22 +129,54 @@ export function ShopHeader() {
 					</div>
 
 					{/* Mobile toggle */}
-					<div className="relative z-10 flex items-center gap-4 lg:hidden">
+					<div className="flex items-center gap-2 lg:hidden">
 						<CartButton className="text-foreground" />
 						<button
-							className="cursor-pointer text-foreground"
-							onClick={() => setIsMenuOpen((v) => !v)}
+							type="button"
+							onClick={() => setIsMenuOpen(true)}
 							aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
 							aria-expanded={isMenuOpen}
+							className="flex h-11 w-11 cursor-pointer items-center justify-center text-foreground transition-colors duration-300 hover:text-primary"
 						>
-							{isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+							{/* Solo el icono de "hamburguesa": con el menú abierto el
+							    overlay (z-60) tapa el header, así que aquí nunca se ve
+							    el estado "cerrando". El cierre vive en el propio overlay,
+							    en `MobileNavMenu`. */}
+							<Menu size={24} />
 						</button>
 					</div>
 				</div>
 			</header>
 
-			{/* Menú móvil fuera del <header>, montado en <body> vía portal */}
-			{mobileMenu}
+			<MobileNavMenu
+				open={isMenuOpen}
+				onOpenChange={setIsMenuOpen}
+				label="Menú de la tienda"
+				navLabel="Navegación móvil"
+			>
+				{links.map((link, index) => (
+					<MobileNavLink
+						key={link.href}
+						href={link.href}
+						index={index}
+						isActive={isActive(link.href)}
+						onNavigate={() => setIsMenuOpen(false)}
+					>
+						{link.label}
+					</MobileNavLink>
+				))}
+
+				<div className="mt-6 flex flex-col items-center gap-6">
+					<AccountNav
+						variant="mobile"
+						onNavigate={() => setIsMenuOpen(false)}
+					/>
+					<CartButton
+						className="py-2 text-foreground"
+						onNavigate={() => setIsMenuOpen(false)}
+					/>
+				</div>
+			</MobileNavMenu>
 		</>
 	);
 }

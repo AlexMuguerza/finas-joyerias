@@ -12,6 +12,9 @@
 
 export const WHATSAPP_NUMBER = "51962792303";
 
+/** El mismo número, formateado para mostrar en pantalla. */
+export const WHATSAPP_DISPLAY = "+51 962 792 303";
+
 const priceFormatter = new Intl.NumberFormat("es-PE", {
 	style: "currency",
 	currency: "PEN",
@@ -19,6 +22,15 @@ const priceFormatter = new Intl.NumberFormat("es-PE", {
 
 function formatPriceWa(value: number): string {
 	return priceFormatter.format(value);
+}
+
+/**
+ * URL de wa.me con un texto libre. Punto de entrada único para cualquier
+ * enlace a WhatsApp: evita repetir el número a mano en distintos componentes
+ * (que es como se desincronizan los datos de contacto del negocio).
+ */
+export function whatsappUrl(message: string): string {
+	return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }
 
 interface WhatsAppItem {
@@ -41,7 +53,7 @@ export function whatsappCartUrl(items: WhatsAppItem[]): string {
 	});
 
 	const message = `${header}\n${lines.join("\n\n")}`;
-	return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+	return whatsappUrl(message);
 }
 
 /** Abre WhatsApp con el mensaje para un solo producto. */
@@ -51,4 +63,32 @@ export function whatsappProductUrl(product: {
 	sku?: string | null;
 }): string {
 	return whatsappCartUrl([{ ...product, quantity: 1 }]);
+}
+
+export interface WhatsAppContactData {
+	name: string;
+	email?: string;
+	phone?: string;
+	message: string;
+}
+
+/**
+ * Entrega el mensaje del formulario de contacto a WhatsApp.
+ *
+ * La tienda vende 100% por WhatsApp (ver `whatsappCartUrl`), así que el
+ * formulario de la landing no envía correo ni guarda nada: arma el mensaje y
+ * abre el chat con los datos ya escritos. Sin servicios de correo
+ * configurados, un `fetch` a un backend habría perdido los leads.
+ */
+export function whatsappContactUrl(data: WhatsAppContactData): string {
+	const lines = [
+		"Hola, me gustaría hacer una consulta sobre joyería.",
+		"",
+		`Nombre: ${data.name}`,
+	];
+	if (data.phone) lines.push(`Teléfono: ${data.phone}`);
+	if (data.email) lines.push(`Correo: ${data.email}`);
+	lines.push("", data.message);
+
+	return whatsappUrl(lines.join("\n"));
 }

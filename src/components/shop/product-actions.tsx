@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart";
 import { whatsappProductUrl } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
@@ -47,6 +47,17 @@ export function ProductActions({
 }) {
 	const addItem = useCart((s) => s.addItem);
 	const [added, setAdded] = useState(false);
+	// Sin ref + cleanup, cada clic dejaba un `setTimeout` vivo: al navegar
+	// durante la confirmación se llamaba `setAdded` sobre un componente
+	// desmontado, y los clics rápidos apilaban timers que lo apagaban antes
+	// de tiempo.
+	const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useEffect(() => {
+		return () => {
+			if (addedTimer.current) clearTimeout(addedTimer.current);
+		};
+	}, []);
 
 	function handleAdd() {
 		addItem({
@@ -58,7 +69,8 @@ export function ProductActions({
 			imageUrl: product.imageUrl,
 		});
 		setAdded(true);
-		window.setTimeout(() => setAdded(false), 1600);
+		if (addedTimer.current) clearTimeout(addedTimer.current);
+		addedTimer.current = setTimeout(() => setAdded(false), 1600);
 		toast.success(`Producto "${product.name.slice(0, 20)}${product.name.length > 20 ? "..." : ""}" agregado al carrito`);
 	}
 

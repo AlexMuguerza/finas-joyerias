@@ -2,46 +2,80 @@
 
 import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
-import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
+import { MapPin, Mail, Clock, Send, MessageCircle } from "lucide-react";
+import { toast } from "sonner";
+import {
+	WHATSAPP_DISPLAY,
+	whatsappContactUrl,
+	whatsappUrl,
+} from "@/lib/whatsapp";
+
+// Nota: el número y el correo salen de las constantes del negocio.
+// `WHATSAPP_DISPLAY` y `whatsappUrl()` comparten `WHATSAPP_NUMBER` (ver
+// `src/lib/whatsapp.ts`), así que el teléfono que ve el visitante y el que
+// recibe el mensaje nunca se desincronizan.
+const BUSINESS_EMAIL = "info@finasjoyeria.com";
 
 const contactInfo = [
-  {
-    icon: MapPin,
-    title: "Visítanos",
-    details: ["Av. La Marina 2020", "San Isidro, Lima - Perú"],
-  },
-  {
-    icon: Phone,
-    title: "Llámanos",
-    details: ["+51 1 234 5678", "+51 999 888 777"],
-  },
-  {
-    icon: Mail,
-    title: "Escríbenos",
-    details: ["info@finasjoyeria.com", "ventas@finasjoyeria.com"],
-  },
-  {
-    icon: Clock,
-    title: "Horario",
-    details: ["Lun - Vie: 10:00 - 20:00", "Sáb: 10:00 - 18:00"],
-  },
+	{
+		icon: MapPin,
+		title: "Visítanos",
+		details: ["Av. La Marina 2020", "San Isidro, Lima - Perú"],
+	},
+	{
+		icon: MessageCircle,
+		title: "Escríbenos",
+		details: [WHATSAPP_DISPLAY],
+		href: whatsappUrl("Hola, me gustaría hacer una consulta sobre joyería."),
+	},
+	{
+		icon: Mail,
+		title: "Correo",
+		details: [BUSINESS_EMAIL],
+		href: `mailto:${BUSINESS_EMAIL}`,
+	},
+	{
+		icon: Clock,
+		title: "Horario",
+		details: ["Lun - Vie: 10:00 - 20:00", "Sáb: 10:00 - 18:00"],
+	},
 ];
 
 export const Contact = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const isInView = useInView(containerRef, { once: true, margin: "-100px" });
-  const [formState, setFormState] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
-  });
+	const containerRef = useRef<HTMLDivElement>(null);
+	const isInView = useInView(containerRef, { once: true, margin: "-100px" });
+	const [formState, setFormState] = useState({
+		name: "",
+		email: "",
+		phone: "",
+		message: "",
+	});
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Form submission logic
-    console.log(formState);
-  };
+	function handleSubmit(e: React.FormEvent) {
+		e.preventDefault();
+
+		const name = formState.name.trim();
+		const message = formState.message.trim();
+		if (!name || !message) {
+			toast.error("Completa tu nombre y tu mensaje.");
+			return;
+		}
+
+		// La tienda vende por WhatsApp: el formulario entrega el mensaje ya
+		// escrito en lugar de guardarlo en un backend que no existe (los
+		// leads se perdían con el antiguo `console.log`).
+		const url = whatsappContactUrl({
+			name,
+			email: formState.email.trim() || undefined,
+			phone: formState.phone.trim() || undefined,
+			message,
+		});
+
+		window.open(url, "_blank", "noopener,noreferrer");
+		toast.success("Abrimos WhatsApp con tu consulta. Te responderemos enseguida.");
+
+		setFormState({ name: "", email: "", phone: "", message: "" });
+	}
 
   return (
     <section
@@ -139,6 +173,9 @@ export const Contact = () => {
                 <Send size={14} strokeWidth={1.5} />
                 <span>Enviar Mensaje</span>
               </motion.button>
+              <p className="font-body text-xs text-muted-foreground">
+                Te llevamos la consulta a WhatsApp con el mensaje ya escrito.
+              </p>
             </form>
           </motion.div>
 
@@ -172,14 +209,27 @@ export const Contact = () => {
                   <h3 className="font-heading text-xl font-light text-heading mb-2">
                     {info.title}
                   </h3>
-                  {info.details.map((detail, i) => (
-                    <p
-                      key={i}
-                      className="font-body text-sm text-text-body"
-                    >
-                      {detail}
-                    </p>
-                  ))}
+                  {info.details.map((detail, i) =>
+                    info.href ? (
+                      <a
+                        key={i}
+                        href={info.href}
+                        target={info.href.startsWith("http") ? "_blank" : undefined}
+                        rel={
+                          info.href.startsWith("http")
+                            ? "noopener noreferrer"
+                            : undefined
+                        }
+                        className="block font-body text-sm text-text-body transition-colors duration-300 hover:text-primary"
+                      >
+                        {detail}
+                      </a>
+                    ) : (
+                      <p key={i} className="font-body text-sm text-text-body">
+                        {detail}
+                      </p>
+                    )
+                  )}
                 </div>
               </motion.div>
             ))}

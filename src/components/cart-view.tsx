@@ -3,8 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { MinusIcon, PlusIcon, TrashIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { cartTotal, useCart, type CartItem } from "@/lib/cart";
+import { cartTotal, useCart, type CartItem, MAX_QUANTITY_PER_ITEM } from "@/lib/cart";
+import { useIsMounted } from "@/lib/use-is-mounted";
 import { formatPrice } from "@/lib/format";
 import { whatsappCartUrl } from "@/lib/whatsapp";
 
@@ -91,8 +91,18 @@ function CartRow({ item }: { item: CartItem }) {
 						<button
 							type="button"
 							onClick={() => setQuantity(item.id, item.quantity + 1)}
-							aria-label="Aumentar cantidad"
-							className="flex h-8 w-8 cursor-pointer items-center justify-center transition-colors hover:bg-foreground/5"
+							disabled={item.quantity >= MAX_QUANTITY_PER_ITEM}
+							aria-label={
+								item.quantity >= MAX_QUANTITY_PER_ITEM
+									? `Máximo ${MAX_QUANTITY_PER_ITEM} unidades por producto`
+									: "Aumentar cantidad"
+							}
+							title={
+								item.quantity >= MAX_QUANTITY_PER_ITEM
+									? `Máximo ${MAX_QUANTITY_PER_ITEM} unidades por producto`
+									: undefined
+							}
+							className="flex h-8 w-8 cursor-pointer items-center justify-center transition-colors hover:bg-foreground/5 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
 						>
 							<PlusIcon size={13} />
 						</button>
@@ -110,8 +120,7 @@ export function CartView() {
 	const items = useCart((s) => s.items);
 	const clear = useCart((s) => s.clear);
 	// localStorage solo existe en el cliente: evita parpadeo de SSR.
-	const [mounted, setMounted] = useState(false);
-	useEffect(() => setMounted(true), []);
+	const mounted = useIsMounted();
 
 	if (!mounted) {
 		return (
