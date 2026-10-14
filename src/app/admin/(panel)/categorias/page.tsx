@@ -64,21 +64,22 @@ export default async function AdminCategoriesPage() {
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead>Imagen</TableHead>
-								<TableHead>Nombre</TableHead>
-								<TableHead>Slug</TableHead>
-								<TableHead>Productos</TableHead>
-								<TableHead>Creada</TableHead>
-								<TableHead className="text-right">Acciones</TableHead>
+<TableHead>Imagen</TableHead>
+							<TableHead>Nombre</TableHead>
+							<TableHead>Slug</TableHead>
+							<TableHead>Descripción</TableHead>
+							<TableHead>Productos</TableHead>
+							<TableHead>Creada</TableHead>
+							<TableHead className="text-right">Acciones</TableHead>
 							</TableRow>
 						</TableHeader>
 						<TableBody>
 							{rowsWithImage.length === 0 ? (
 								<TableRow>
-									<TableCell
-										colSpan={6}
-										className="py-8 text-center text-muted-foreground"
-									>
+<TableCell
+											colSpan={7}
+											className="py-8 text-center text-muted-foreground"
+										>
 										Aún no hay categorías.
 									</TableCell>
 								</TableRow>
@@ -94,6 +95,20 @@ export default async function AdminCategoriesPage() {
 										<TableCell className="font-medium">{row.name}</TableCell>
 										<TableCell className="text-muted-foreground">
 											{row.slug}
+										</TableCell>
+										<TableCell className="max-w-[18rem]">
+											{row.description ? (
+												<span
+													className="line-clamp-2 text-xs wrap-break-word text-muted-foreground"
+													title={row.description}
+												>
+													{row.description}
+												</span>
+											) : (
+												<span className="text-xs text-muted-foreground/60">
+													—
+												</span>
+											)}
 										</TableCell>
 										<TableCell>{row.productCount}</TableCell>
 										<TableCell>{formatDate(row.createdAt)}</TableCell>
