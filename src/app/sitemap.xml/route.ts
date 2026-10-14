@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/server/db";
-import { categories, products } from "@/db/schema";
+import { products } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -45,25 +45,18 @@ export async function GET() {
 	];
 
 	// Dinámicas: si la BD falla, el sitemap base sigue respondiendo.
+	//
+	// Nota: no se emiten las variantes `/shop?categoria=<slug>`. La página de
+	// catálogo declara `alternates.canonical` a `/shop`, así que Google
+	// canonicaliza todas las variantes a la misma URL y las entradas con query
+	// solo serían ruido en Search Console. Si algún día se decide indexar cada
+	// categoría por separado, hay que quitar ese canonical y usar rutas
+	// propias (`/categorias/<slug>`) en lugar de query params.
 	try {
 		const db = getDb();
-		const [categoryRows, productRows] = await Promise.all([
-			db
-				.select({ slug: categories.slug, updatedAt: categories.updatedAt })
-				.from(categories),
-			db
-				.select({ slug: products.slug, updatedAt: products.updatedAt })
-				.from(products),
-		]);
-
-		for (const c of categoryRows) {
-			entries.push({
-				url: `${BASE_URL}/shop?categoria=${encodeURIComponent(c.slug)}`,
-				lastModified: xmlDate(c.updatedAt ?? new Date()),
-				changeFrequency: "weekly",
-				priority: "0.8",
-			});
-		}
+		const productRows = await db
+			.select({ slug: products.slug, updatedAt: products.updatedAt })
+			.from(products);
 
 		for (const p of productRows) {
 			entries.push({
@@ -74,7 +67,7 @@ export async function GET() {
 			});
 		}
 	} catch (error) {
-		console.error("[sitemap] No se pudieron cargar categorías/productos:", error);
+		console.error("[sitemap] No se pudieron cargar los productos:", error);
 	}
 
 	const xml = `<?xml version="1.0" encoding="UTF-8"?>

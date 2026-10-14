@@ -39,6 +39,17 @@ export default async function ShopPage({
 }) {
 	const { categoria, q, featured, orden } = await searchParams;
 	const db = getDb();
+	// Un único "ahora" para todo el render. Antes, el filtro de novedades y
+	// cada badge "Nuevo" llamaban a `Date.now()` por separado: en el borde de
+	// los 7 días un producto podía entrar en el filtro y salir sin la etiqueta
+	// (o al revés) dentro de la misma respuesta.
+	//
+	// Server Component async con `dynamic = "force-dynamic"`: el HTML se genera
+	// una vez por petición y `now` no se hidrata en el cliente, así que no hay
+	// desajuste posible. La regla existe para Client Components, donde un render
+	// impure sí lo produce.
+	// eslint-disable-next-line react-hooks/purity
+	const now = Date.now();
 
 	// Conteo de productos por categoría (independiente del filtro activo).
 	const countsByCategory = await db
@@ -80,7 +91,7 @@ export default async function ShopPage({
 	// (decisión de producto: no tocar el schema todavía).
 	if (featured === "1") {
 		conditions.push(
-			gte(products.createdAt, new Date(Date.now() - SEVEN_DAYS_MS))
+			gte(products.createdAt, new Date(now - SEVEN_DAYS_MS))
 		);
 	}
 
@@ -121,7 +132,7 @@ export default async function ShopPage({
 		categoryName: p.categoryName,
 		imageUrl: p.imageUrl ? `/api/images/${p.imageUrl}` : null,
 		imageAlt: p.imageAlt,
-		isNew: p.createdAt.getTime() >= Date.now() - SEVEN_DAYS_MS,
+		isNew: p.createdAt.getTime() >= now - SEVEN_DAYS_MS,
 	}));
 
 	const chips = categoryRows.map((c) => ({

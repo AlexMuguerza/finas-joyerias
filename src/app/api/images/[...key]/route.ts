@@ -7,6 +7,16 @@ export const dynamic = "force-dynamic";
 const OBJECT_KEY_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9/.-]*$/;
 
 /**
+ * Rutas de traversal o vacías. El patrón de arriba las admitía (`products/../x`
+ * encaja: los `/` y los `.` están permitidos). R2 es un namespace plano, así
+ * que hoy no hay lectura fuera del bucket, pero no queremos depender de esa
+ * suposición para proteger una ruta pública.
+ */
+const TRAVERSAL_PATTERN = /(^|\/)\.\.?(\/|$)/;
+
+const MAX_KEY_LENGTH = 200;
+
+/**
  * Sirve imágenes desde R2 a través del worker.
  *
  * El bucket no es público: en el worker (producción) se lee con el binding
@@ -23,7 +33,12 @@ export async function GET(
 	const { key } = await params;
 	const objectKey = key.join("/");
 
-	if (!objectKey || objectKey.length > 200 || !OBJECT_KEY_PATTERN.test(objectKey)) {
+	if (
+		!objectKey ||
+		objectKey.length > MAX_KEY_LENGTH ||
+		!OBJECT_KEY_PATTERN.test(objectKey) ||
+		TRAVERSAL_PATTERN.test(objectKey)
+	) {
 		console.log("Clave inválida:", objectKey);
 		return new Response("Clave inválida", { status: 400 });
 	}
@@ -48,7 +63,11 @@ export async function GET(
 	if (contentType) headers.set("Content-Type", contentType);
 	const etag = r2Response.headers.get("etag");
 	if (etag) headers.set("ETag", etag);
-	headers.set("Cache-Control", "public, max-age=86400, s-maxage=86400, immutable");
+	// `immutable` es seguro porque la clave incluye el código de versión
+	// (`<slug>.<code>.<ext>`): cambiar una imagen genera una clave nueva, así
+	// que esta URL nunca debe volver a servir el objeto anterior. El TTL largo
+	// saca partido de la caché del edge sin volver a pedir el objeto a R2.
+	headers.set("Cache-Control", "public, max-age=86400, s-maxage=31536000, immutable");
 
 	const response = new Response(r2Response.body, { headers });
 

@@ -63,6 +63,14 @@ export default async function ProductPage({
 }) {
 	const { slug } = await params;
 	const db = getDb();
+	// Un único "ahora" para el badge del producto y el de los relacionados, que
+	// antes comparaban contra dos instantes distintos.
+	//
+	// Server Component async con `dynamic = "force-dynamic"`: el HTML se genera
+	// una vez por petición y `now` no se hidrata en el cliente. La regla apunta a
+	// Client Components, donde un render impure sí provoca desajuste.
+	// eslint-disable-next-line react-hooks/purity
+	const now = Date.now();
 
 	const rows = await db
 		.select({
@@ -90,7 +98,7 @@ export default async function ProductPage({
 	}
 
 	const product = rows[0];
-	const isNew = product.createdAt.getTime() >= Date.now() - SEVEN_DAYS_MS;
+	const isNew = product.createdAt.getTime() >= now - SEVEN_DAYS_MS;
 
 	// Relacionados: primero los de la misma categoría; si faltan para llenar
 	// la fila (máx. 8), se completan con los más recientes de otras
@@ -144,7 +152,7 @@ export default async function ProductPage({
 		categoryName: p.categoryName,
 		imageUrl: p.imageUrl ? `/api/images/${p.imageUrl}` : null,
 		imageAlt: p.imageAlt,
-		isNew: p.createdAt.getTime() >= Date.now() - SEVEN_DAYS_MS,
+		isNew: p.createdAt.getTime() >= now - SEVEN_DAYS_MS,
 	}));
 
 	const productUrl = `/productos/${product.slug}`;

@@ -22,6 +22,13 @@ const COOKIE_PREFIX = "finas-joyeria";
  * y cada server action usa `getUserSession()`/`getAdminSession()` — una cookie
  * presente no garantiza que la sesión siga siendo válida ni que el usuario
  * tenga el rol correcto.
+ *
+ * TODO(migración a proxy.ts): Next.js 16 marca `middleware.ts` como
+ * deprecado y avisa en cada `next build`. La convención nueva es `proxy.ts`,
+ * pero se ejecuta en el runtime de Node.js y `@opennextjs/cloudflare` sigue
+ * exigiendo Edge middleware, así que renombrarlo rompe el despliegue.
+ * Revisar en https://github.com/opennextjs/opennextjs-cloudflare/issues cuando
+ * haya soporte de `proxy.ts`; hasta entonces el aviso del build es esperado.
  */
 export function middleware(request: NextRequest) {
 	if (getSessionCookie(request, { cookiePrefix: COOKIE_PREFIX })) {
