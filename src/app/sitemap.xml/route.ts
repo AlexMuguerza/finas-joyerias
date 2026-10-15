@@ -1,9 +1,10 @@
 import { getDb } from "@/lib/server/db";
+import { SITE_ORIGIN } from "@/lib/site";
 import { products } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
-const BASE_URL = "https://finasjoyerias.zfd.app";
+const BASE_URL = SITE_ORIGIN;
 
 function xmlDate(date: Date): string {
 	return date.toISOString();

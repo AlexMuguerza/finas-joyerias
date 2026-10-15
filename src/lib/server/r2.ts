@@ -7,25 +7,51 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 let cachedClient: AwsClient | null = null;
 
+/**
+ * Al worker desplegado le faltan identificadores de R2.
+ *
+ * No es lo mismo que "R2 respondió mal": una cosa se arregla con
+ * `wrangler secret put`, la otra mirando el error de red. Se distingue con un
+ * tipo propio porque el síntoma en el panel —una subida que no arranca— no dice
+ * ninguna de las dos cosas.
+ */
+export class MissingR2ConfigError extends Error {
+	readonly missing: string[];
+
+	constructor(missing: string[]) {
+		super(`Faltan variables de entorno de R2: ${missing.join(", ")}`);
+		this.name = "MissingR2ConfigError";
+		this.missing = missing;
+	}
+}
+
+type R2VarName =
+	| "CLOUDFLARE_ACCOUNT_ID"
+	| "R2_ACCESS_KEY_ID"
+	| "R2_SECRET_ACCESS_KEY"
+	| "R2_BUCKET_NAME";
+
 function getR2Env() {
 	const env = getCloudflareContext().env;
-	const { CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME } = env;
-	if (
-		!CLOUDFLARE_ACCOUNT_ID ||
-		!R2_ACCESS_KEY_ID ||
-		!R2_SECRET_ACCESS_KEY ||
-		!R2_BUCKET_NAME
-	) {
-		throw new Error(
-			"Faltan variables de entorno de R2 (CLOUDFLARE_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME)"
-		);
-	}
-	return {
-		accountId: CLOUDFLARE_ACCOUNT_ID,
-		accessKeyId: R2_ACCESS_KEY_ID,
-		secretAccessKey: R2_SECRET_ACCESS_KEY,
-		bucket: R2_BUCKET_NAME,
+	const missing: R2VarName[] = [];
+
+	// Se listan todas las que faltan en vez de fallar en la primera: el error
+	// se lee en un log del worker y reparar de una en una cuesta un deploy cada
+	// intento.
+	const requireVar = (name: R2VarName): string => {
+		const value = env[name];
+		if (!value) missing.push(name);
+		return value ?? "";
 	};
+
+	const accountId = requireVar("CLOUDFLARE_ACCOUNT_ID");
+	const accessKeyId = requireVar("R2_ACCESS_KEY_ID");
+	const secretAccessKey = requireVar("R2_SECRET_ACCESS_KEY");
+	const bucket = requireVar("R2_BUCKET_NAME");
+
+	if (missing.length > 0) throw new MissingR2ConfigError(missing);
+
+	return { accountId, accessKeyId, secretAccessKey, bucket };
 }
 
 function getR2Client(): AwsClient {
@@ -68,8 +94,10 @@ export async function getPresignedUploadUrl(params: {
 /**
  * True si el entorno actual expone credenciales S3 del bucket remoto.
  * En `next dev` (y previews locales de wrangler) vienen de `.dev.vars`;
- * en el worker desplegado normalmente no están configuradas (ahí se usa
- * el binding R2).
+ * en el worker desplegado hay que declararlas también (`vars` + `secret put`).
+ *
+ * Cuando faltan, `fetchR2Object` cae al binding `R2` y sigue leyendo; lo que
+ * se rompe es la subida, que solo se puede firmar contra la API S3.
  */
 function hasS3Credentials(): boolean {
 	const env = getCloudflareContext().env;

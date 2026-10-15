@@ -47,6 +47,24 @@ Cloudflare despliega **solo** al hacer push a `main`. La rama de trabajo es
 
 Nunca hagas `git commit` ni `git push` sin que te lo pidan.
 
+### Variables que el worker necesita
+
+En `next dev` vienen de `.dev.vars`. **El worker desplegado no las hereda**: las
+faltan y el panel lo nota.
+
+| Variable | Dónde | Para qué |
+|---|---|---|
+| `R2` (binding) | `wrangler.jsonc` | **leer** imágenes |
+| `CLOUDFLARE_ACCOUNT_ID` | `wrangler.jsonc` → `vars` | firmar la subida contra la API S3 |
+| `R2_BUCKET_NAME` | `wrangler.jsonc` → `vars` | ídem |
+| `R2_ACCESS_KEY_ID` | `wrangler secret put` | ídem |
+| `R2_SECRET_ACCESS_KEY` | `wrangler secret put` | ídem |
+
+Leer y subir no necesitan lo mismo: la lectura va por el binding, pero la subida
+**solo** se puede prefirmar contra la API S3. Con las cuatro ausente, el panel
+responde "Subida de imágenes no configurada en el servidor" y el detalle de
+qué falta sale en los logs del worker.
+
 ---
 
 ## 3. Arquitectura: la capa de acceso a datos
@@ -149,6 +167,16 @@ motivo, se sobrescriben al actualizar.
 
 - **Todas pasan por `/api/images/<key>`** (R2 no tiene dominio público).
   Construye la URL con `imageUrl()` de `lib/server/media.ts`, nunca a mano.
+- **`imageUrl()` devuelve una URL ABSOLUTA, y es deliberado.** El optimizador
+  (`/_next/image`) del worker resuelve las rutas relativas contra el binding
+  `ASSETS`, que solo sirve ficheros estáticos de `.open-next/assets`:
+  `/api/images/[...key]` es una route handler, no un fichero, así que en
+  relativo daba 404 en producción y funcionaba en `next dev`. En absoluto,
+  OpenNext lo pide por `fetch()` global y `global_fetch_strictly_public` lo
+  reintroduce por la puerta de delante del worker. Por eso `next.config.ts`
+  necesita `remotePatterns` con el propio origen.
+- **El origen del sitio vive solo en `src/lib/site.ts`** (`SITE_ORIGIN`), no
+  repetido en `metadataBase`, el sitemap o `remotePatterns`.
 - **`RemoteImage` es el componente único.** Envuelve `next/image` y añade
   skeleton y fallback a 404, que `next/image` solo no da.
 - **`fill` exige altura en el contenedor.** Un contenedor tipo `w-full` sin
@@ -156,8 +184,8 @@ motivo, se sobrescriben al actualizar.
   panel: usa `aspect-[4/3]`.
 - **Declara `sizes`** en imágenes grandes: sin eso el navegador descarga
   candidatos del tamaño de la pantalla y se pierde el ahorro.
-- `next.config.ts` declara `formats: ["image/avif", "image/webp"]` y **no**
-  lleva `remotePatterns`: no hay imágenes externas.
+- `next.config.ts` declara `formats: ["image/avif", "image/webp"]` y un único
+  `remotePattern`: el propio `/api/images/**`. No hay imágenes externas.
 
 ---
 

@@ -86,12 +86,13 @@ async function requestUploadUrl(
 	const upload = await createPresignedUpload(prefix, slug, fileName);
 
 	if (!upload.ok) {
-		return {
-			error:
-				upload.reason === "unauthorized"
-					? "No autorizado"
-					: "No se pudo generar la URL de subida",
-		};
+		if (upload.reason === "unauthorized") return { error: "No autorizado" };
+		if (upload.reason === "config") {
+			// El despliegue, no el usuario: el log del worker lleva la lista
+			// exacta de variables que faltan.
+			return { error: "Subida de imágenes no configurada en el servidor" };
+		}
+		return { error: "No se pudo generar la URL de subida" };
 	}
 
 	return {

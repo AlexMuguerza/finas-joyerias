@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { SITE_ORIGIN } from "@/lib/site";
 import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
@@ -24,9 +25,9 @@ export const metadata: Metadata = {
   authors: [{ name: "Finas Joyería" }],
   creator: "Finas Joyería",
   publisher: "Finas Joyería",
-  metadataBase: new URL("https://finasjoyerias.zfd.app"),
+  metadataBase: new URL(SITE_ORIGIN),
   alternates: {
-    canonical: "https://finasjoyerias.zfd.app",
+    canonical: SITE_ORIGIN,
   },
   icons: {
     icon: "/logo-sin-fondo.ico",
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "es_PE",
-    url: "https://finasjoyerias.zfd.app",
+    url: SITE_ORIGIN,
     siteName: "Finas Joyería",
     title: "Finas | Joyería Exclusiva y Elegante",
     description:

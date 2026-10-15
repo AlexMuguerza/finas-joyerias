@@ -10,6 +10,7 @@ import {
 	deleteR2Object,
 	getPresignedUploadUrl,
 	makeObjectKey,
+	MissingR2ConfigError,
 	randomCode,
 } from "@/lib/server/r2";
 import { categories, images, products, user } from "@/db/schema";
@@ -149,9 +150,10 @@ export async function countAdminUsers(): Promise<number> {
 /**
  * URL prefirmada para subir una imagen de R2 desde el navegador.
  *
- * El resultado distingue "no autorizado" de "R2 falló": colapsarlos en `null`
- * haría que un fallo de infraestructura se leera al admin como un problema de
- * permisos, que es justo la clase de mentira que hay que evitar en un panel.
+ * El resultado distingue "no autorizado", "al worker le falta configuración" y
+ * "R2 falló": colapsarlos en `null` o en un único motivo haría que un despliegue
+ * mal configurado se leera al admin como un problema de permisos, que es justo
+ * la clase de mentira que hay que evitar en un panel.
  */
 export async function createUploadUrl(
 	prefix: "categories" | "products",
@@ -159,7 +161,7 @@ export async function createUploadUrl(
 	fileName: string
 ): Promise<
 	| { ok: true; presignedUrl: string; key: string }
-	| { ok: false; reason: "unauthorized" | "presign" }
+	| { ok: false; reason: "unauthorized" | "config" | "presign" }
 > {
 	if (!(await requireAdmin())) return { ok: false, reason: "unauthorized" };
 
@@ -170,6 +172,10 @@ export async function createUploadUrl(
 		const presignedUrl = await getPresignedUploadUrl({ key });
 		return { ok: true, presignedUrl, key };
 	} catch (error) {
+		if (error instanceof MissingR2ConfigError) {
+			console.error(`[R2] Configuración incompleta: faltan ${error.missing.join(", ")}`);
+			return { ok: false, reason: "config" };
+		}
 		console.error("Error al generar URL prefirmada:", error);
 		return { ok: false, reason: "presign" };
 	}
