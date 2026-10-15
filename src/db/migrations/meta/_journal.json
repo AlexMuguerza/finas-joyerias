@@ -15,6 +15,13 @@
       "when": 1788892897223,
       "tag": "0001_medical_captain_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792036906253,
+      "tag": "0002_chemical_annihilus",
+      "breakpoints": true
     }
   ]
 }
