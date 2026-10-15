@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { and, asc, count, desc, eq, gte, ilike } from "drizzle-orm";
-import { getDb } from "@/lib/server/db";
-import { categories, images, products } from "@/db/schema";
 import { ProductCard } from "@/components/shop/product-card";
 import type { ShopProduct } from "@/components/shop/product-card";
 import { CatalogToolbar } from "@/components/shop/catalog-toolbar";
 import type { CatalogCategory } from "@/components/shop/catalog-toolbar";
+import { listCatalog } from "@/lib/server/products";
+import { listCategoryChips } from "@/lib/server/categories";
+import { SEVEN_DAYS_MS } from "@/lib/server/media";
 
 export const dynamic = "force-dynamic";
 
@@ -32,8 +32,6 @@ interface SearchParams {
 	orden?: string;
 }
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-
 export default async function ShopPage({
 	searchParams,
 }: {
@@ -51,107 +49,27 @@ export default async function ShopPage({
 	// impure sí lo produce.
 	// eslint-disable-next-line react-hooks/purity
 	const now = Date.now();
-
-	// Filtros server-side. Se construyen antes de consultar para poder aplicarlos
-	// dentro del `try`.
-	const conditions = [];
+	const since = new Date(now - SEVEN_DAYS_MS);
 
 	// Un fallo de la base de datos no debe dejar el catálogo entero en 500: en
-	// un plan gratuito de Neon los cortes son relativos frecuencia. Se
+	// un plan gratuito de Neon los cortes son relativamente frecuentes. Se
 	// distingue "no hay productos" de "no pudimos consultar", porque un
-	// catálogo vacío sin explicación se lee como una tienda vacía y Madden
-	// clientes reales.
+	// catálogo vacío sin explicación se lee como una tienda vacía y hace
+	// perder clientes reales.
 	let productCards: ShopProduct[] = [];
 	let chips: CatalogCategory[] = [];
 	let dbFailed = false;
 
 	try {
-		const db = getDb();
+		// Listado y chips salen de consultas separadas pero paralelas: los chips
+		// dependen del total por categoría, que no varía con el filtro activo.
+		const [cards, categoryChips] = await Promise.all([
+			listCatalog({ categoria, q, featured, orden, since }),
+			listCategoryChips(),
+		]);
 
-		// Conteo de productos por categoría (independiente del filtro activo).
-		const countsByCategory = await db
-			.select({ categoryId: products.categoryId, total: count(products.id) })
-			.from(products)
-			.groupBy(products.categoryId);
-
-		const countMap = new Map(
-			countsByCategory.map((c) => [c.categoryId, c.total])
-		);
-
-		const categoryRows = await db
-			.select({
-				id: categories.id,
-				name: categories.name,
-				slug: categories.slug,
-			})
-			.from(categories)
-			.orderBy(asc(categories.name));
-
-		if (categoria) {
-			const found = categoryRows.find((c) => c.slug === categoria);
-			if (found) {
-				conditions.push(eq(products.categoryId, found.id));
-			} else {
-				// Categoría inexistente → sin resultados.
-				conditions.push(eq(products.id, ""));
-			}
-		}
-
-		if (q && q.trim()) {
-			conditions.push(ilike(products.name, `%${q.trim()}%`));
-		}
-
-		// "featured": por ahora = piezas creadas hace menos de 7 días
-		// (decisión de producto: no tocar el schema todavía).
-		if (featured === "1") {
-			conditions.push(gte(products.createdAt, new Date(now - SEVEN_DAYS_MS)));
-		}
-
-		const orderBy =
-			orden === "precio-asc"
-				? [asc(products.price)]
-				: orden === "precio-desc"
-					? [desc(products.price)]
-					: orden === "nombre"
-						? [asc(products.name)]
-						: [desc(products.createdAt)];
-
-		const rows = await db
-			.select({
-				id: products.id,
-				name: products.name,
-				slug: products.slug,
-				price: products.price,
-				sku: products.sku,
-				categoryId: products.categoryId,
-				categoryName: categories.name,
-				imageUrl: images.key,
-				imageAlt: images.altText,
-				createdAt: products.createdAt,
-			})
-			.from(products)
-			.leftJoin(categories, eq(products.categoryId, categories.id))
-			.leftJoin(images, eq(images.id, products.imageId))
-			.where(and(...conditions))
-			.orderBy(...orderBy);
-
-		productCards = rows.map((p) => ({
-			id: p.id,
-			name: p.name,
-			slug: p.slug,
-			price: p.price,
-			sku: p.sku,
-			categoryName: p.categoryName,
-			imageUrl: p.imageUrl ? `/api/images/${p.imageUrl}` : null,
-			imageAlt: p.imageAlt,
-			isNew: p.createdAt.getTime() >= now - SEVEN_DAYS_MS,
-		}));
-
-		chips = categoryRows.map((c) => ({
-			slug: c.slug,
-			name: c.name,
-			count: countMap.get(c.id) ?? 0,
-		}));
+		productCards = cards;
+		chips = categoryChips;
 	} catch (error) {
 		dbFailed = true;
 		console.error("[shop] No se pudo cargar el catálogo:", error);

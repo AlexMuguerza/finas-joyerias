@@ -1,6 +1,7 @@
 import { asc, count, eq } from "drizzle-orm";
 import { getDb } from "@/lib/server/db";
 import { categories, images, products } from "@/db/schema";
+import { imageUrl } from "@/lib/server/media";
 import { formatDate } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -37,13 +38,11 @@ export default async function AdminCategoriesPage() {
 		.groupBy(categories.id, images.key)
 		.orderBy(asc(categories.name));
 
-	// Las imágenes se sirven a través del worker (R2 no es público) y las
-	// cachea Cloudflare: /api/images/<key>.
+	// Las imágenes se sirven a través del worker (R2 no es público) y las cachea
+	// Cloudflare. La construcción de la URL vive en `lib/server/media.ts`.
 	const rowsWithImage = rows.map((row) => ({
 		...row,
-		imageUrl: row.imageKey
-			? `/api/images/${row.imageKey}`
-			: null,
+		imageUrl: imageUrl(row.imageKey),
 	}));
 
 	return (

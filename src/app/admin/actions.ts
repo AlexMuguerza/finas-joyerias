@@ -2,18 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { count, eq } from "drizzle-orm";
 import { v7 } from "uuid";
-import { getAdminSession } from "@/lib/server/session";
-import { getDb } from "@/lib/server/db";
 import {
-	deleteR2Object,
-	getPresignedUploadUrl,
-	makeObjectKey,
-	randomCode,
-} from "@/lib/server/r2";
-import { categories, images, products, user } from "@/db/schema";
-import { generateSku, isValidSku } from "@/lib/server/sku";
+	countAdminUsers,
+	createCategory as createCategoryRow,
+	createProduct as createProductRow,
+	createUploadUrl as createPresignedUpload,
+	deleteCategory as deleteCategoryRow,
+	deleteProduct as deleteProductRow,
+	updateCategory as updateCategoryRow,
+	updateProduct as updateProductRow,
+	type MutationResult,
+} from "@/lib/server/admin";
+import { isValidSku } from "@/lib/server/sku";
 import { EMPTY_SLUG_ERROR, resolveSlug } from "@/lib/slug";
 
 export type AdminActionState = {
@@ -23,60 +24,56 @@ export type AdminActionState = {
 
 const UNAUTHORIZED: AdminActionState = { error: "No autorizado" };
 
-/**
- * Número total de administradores, contado en el servidor.
- *
- * `UsersTable` solo carga los primeros 100 usuarios, así que el cliente no
- * puede decidir de forma fiable si el usuario que va a degradar es el último
- * admin: con más de 100 cuentas vería "solo aparece uno" cuando en realidad
- * hay más. El conteo real lo hace el servidor y se pasa como prop.
- */
-export async function countAdminUsers(): Promise<number> {
-	if (!(await getAdminSession())) return 0;
-	const [row] = await getDb()
-		.select({ total: count() })
-		.from(user)
-		.where(eq(user.role, "admin"));
-	return row?.total ?? 0;
-}
-
-function isUniqueViolation(error: unknown): boolean {
-	return error instanceof Error && /duplicate key value|unique constraint/i.test(error.message);
-}
-
-/**
- * ¿La violación de unicidad la provocó la columna `sku`?
- *
- * El mismo error salta por slug o nombre duplicados, y en ese caso reintentar
- * con otro SKU no arregla nada: solo gasta los 5 intentos. Postgres incluye el
- * constraint y la columna en el mensaje, así que se puede discriminar.
- */
-function isSkuUniqueViolation(error: unknown): boolean {
-	if (!isUniqueViolation(error)) return false;
-	const message = (error as Error).message.toLowerCase();
-	return message.includes("sku");
-}
+export { countAdminUsers };
 
 export type PresignResult =
 	| { presignedUrl: string; key: string; slug: string }
 	| { error: string };
 
 /**
+ * Traduce el resultado del DAL al mensaje que ve el admin.
+ *
+ * Antes cada acción repetía su propio `try/catch` con la misma estructura
+ * (`isUniqueViolation` → "Ya existe...", resto → "No se pudo..."). Con el
+ * resultado discriminado, el mapeo está en un solo sitio y añadir una causa
+ * nueva no obliga a tocar ocho acciones.
+ */
+function toState(
+	result: MutationResult,
+	duplicateMessage: string,
+	genericMessage: string,
+	notFoundMessage?: string
+): AdminActionState {
+	if (result.ok) return null;
+
+	switch (result.reason) {
+		case "unauthorized":
+			return UNAUTHORIZED;
+		case "duplicate":
+			return { error: duplicateMessage };
+		case "not-found":
+			return { error: notFoundMessage ?? "El registro ya no existe. Recarga la página." };
+		case "image":
+			return { error: "No se pudo registrar la imagen" };
+		default:
+			return { error: genericMessage };
+	}
+}
+
+/**
  * Genera una URL prefirmada para que el navegador suba la imagen
  * directamente a R2.
  *
- * La key se genera en el servidor con el formato `<prefix>/<slug>.<code>.<ext>`
- * donde `<code>` es un código alfanumérico de 4 caracteres para versionar.
+ * El slug llega ya resuelto: `resolveSlug` es validación de entrada y
+ * corresponde a la acción, no a la capa de datos.
  */
-async function createUploadUrl(
+async function requestUploadUrl(
 	prefix: "categories" | "products",
 	name: string,
 	slugInput: string,
 	fileName: string,
 	contentType: string
 ): Promise<PresignResult> {
-	if (!(await getAdminSession())) return { error: "No autorizado" };
-
 	if (!name || !fileName || !contentType.startsWith("image/")) {
 		return { error: "El archivo debe ser una imagen" };
 	}
@@ -86,14 +83,22 @@ async function createUploadUrl(
 		return { error: EMPTY_SLUG_ERROR };
 	}
 
-	const key = makeObjectKey(prefix, slug, randomCode(4), fileName);
-	try {
-		const presignedUrl = await getPresignedUploadUrl({ key });
-		return { presignedUrl, key, slug };
-	} catch (error) {
-		console.error("Error al generar URL prefirmada:", error);
-		return { error: "No se pudo generar la URL de subida" };
+	const upload = await createPresignedUpload(prefix, slug, fileName);
+
+	if (!upload.ok) {
+		return {
+			error:
+				upload.reason === "unauthorized"
+					? "No autorizado"
+					: "No se pudo generar la URL de subida",
+		};
 	}
+
+	return {
+		presignedUrl: upload.presignedUrl,
+		key: upload.key,
+		slug,
+	};
 }
 
 export async function getCategoryUploadUrl(
@@ -102,7 +107,7 @@ export async function getCategoryUploadUrl(
 	fileName: string,
 	contentType: string
 ): Promise<PresignResult> {
-	return createUploadUrl("categories", name, slugInput, fileName, contentType);
+	return requestUploadUrl("categories", name, slugInput, fileName, contentType);
 }
 
 export async function getProductUploadUrl(
@@ -111,100 +116,7 @@ export async function getProductUploadUrl(
 	fileName: string,
 	contentType: string
 ): Promise<PresignResult> {
-	return createUploadUrl("products", name, slugInput, fileName, contentType);
-}
-
-const SKU_MAX_ATTEMPTS = 5;
-
-/**
- * Genera un SKU candidato a partir del nombre de la categoría.
- *
- * Esto es solo una optimización para no gastar un reintento en el caso
- * normal: la unicidad real la garantiza el constraint `products_sku_unique`.
- */
-async function generateAvailableSku(categoryId: string): Promise<string> {
-	const db = getDb();
-	const [category] = await db
-		.select({ name: categories.name })
-		.from(categories)
-		.where(eq(categories.id, categoryId))
-		.limit(1);
-	const categoryName = category?.name ?? "";
-
-	let lastError: unknown;
-	for (let attempt = 0; attempt < SKU_MAX_ATTEMPTS; attempt++) {
-		const sku = generateSku(categoryName);
-		const [taken] = await db
-			.select({ id: products.id })
-			.from(products)
-			.where(eq(products.sku, sku))
-			.limit(1);
-		if (!taken) return sku;
-		lastError = new Error(`SKU duplicado: ${sku}`);
-	}
-	throw lastError ?? new Error("No se pudo generar un SKU único");
-}
-
-type ProductInsert = typeof products.$inferInsert;
-
-/**
- * Inserta el producto. Si el SKU es autogenerado y choca con el constraint
- * único, regenera y reintenta hasta `SKU_MAX_ATTEMPTS` veces.
- *
- * Esto es lo que hace real el contrato de `generateSku` ("quien llama debe
- * reintentar con un nuevo SKU ante colisión"): antes, la colisión se traducía
- * en un error de "Ya existe un producto con ese nombre, slug o SKU" que el
- * admin no podía interpretar. No hace falta transacción porque cada INSERT
- * fallido se revierte por completo y no deja estado parcial (patrón de
- * concurrencia optimista: el constraint decide el ganador de cada carrera).
- *
- * Un SKU escrito a mano nunca se reintenta: si está duplicado, es un error
- * real que hay que reportar tal cual.
- *
- * `sku` es NOT NULL en el schema: el `null` de la entrada significa
- * "autogenera uno", nunca "escribe null". El INSERT de la línea siguiente
- * siempre recibe un string resuelto.
- */
-async function insertProductWithSkuRetry(
-	values: Omit<ProductInsert, "sku"> & { sku?: string | null }
-): Promise<void> {
-	const db = getDb();
-	const manualSku = values.sku ? values.sku : null;
-	const maxAttempts = manualSku ? 1 : SKU_MAX_ATTEMPTS;
-	let lastError: unknown;
-
-	for (let attempt = 0; attempt < maxAttempts; attempt++) {
-		const sku = manualSku ?? (await generateAvailableSku(values.categoryId));
-		try {
-			await db.insert(products).values({ ...values, sku });
-			return;
-		} catch (error) {
-			lastError = error;
-			if (manualSku || !isSkuUniqueViolation(error)) throw error;
-			console.warn(
-				`[sku] Colisión en "${sku}", reintentando (${attempt + 1}/${maxAttempts})`
-			);
-		}
-	}
-	throw lastError;
-}
-
-/**
- * Si el registro se eliminó con imagen, borra la fila en `images` y el objeto
- * en R2. Mejor esfuerzo: los fallos de R2 no rompen la acción.
- */
-async function cleanupImage(imageId: string | null | undefined): Promise<void> {
-	if (!imageId) return;
-	const db = getDb();
-	const [image] = await db
-		.select({ key: images.key })
-		.from(images)
-		.where(eq(images.id, imageId))
-		.limit(1);
-	await db.delete(images).where(eq(images.id, imageId));
-	if (image?.key) {
-		await deleteR2Object(image.key).catch(() => {});
-	}
+	return requestUploadUrl("products", name, slugInput, fileName, contentType);
 }
 
 // ============================================
@@ -215,8 +127,6 @@ export async function createProduct(
 	_prev: AdminActionState,
 	formData: FormData
 ): Promise<AdminActionState> {
-	if (!(await getAdminSession())) return UNAUTHORIZED;
-
 	const name = String(formData.get("name") ?? "").trim();
 	const slugInput = String(formData.get("slug") ?? "").trim();
 	const description = String(formData.get("description") ?? "").trim();
@@ -231,9 +141,15 @@ export async function createProduct(
 	if (!price || Number.isNaN(Number(price)) || Number(price) < 0) {
 		return { fieldErrors: { price: "Ingresa un precio válido" } };
 	}
-	if (!categoryId) return { fieldErrors: { categoryId: "Selecciona una categoría" } };
+	if (!categoryId) {
+		return { fieldErrors: { categoryId: "Selecciona una categoría" } };
+	}
 	if (skuInput && !isValidSku(skuInput)) {
-		return { fieldErrors: { sku: "El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)" } };
+		return {
+			fieldErrors: {
+				sku: "El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)",
+			},
+		};
 	}
 
 	const slug = resolveSlug(name, slugInput);
@@ -241,41 +157,25 @@ export async function createProduct(
 		return { fieldErrors: { name: EMPTY_SLUG_ERROR } };
 	}
 
-	// 1) Registrar la imagen en `images` (la subida a R2 ya ocurrió).
-	let imageId: string | null = null;
-	if (imageKey) {
-		imageId = v7();
-		try {
-			await getDb().insert(images).values({ id: imageId, key: imageKey });
-		} catch (error) {
-			// La imagen quedó huérfana en R2: eliminarla y fallar sin crear nada.
-			await deleteR2Object(imageKey).catch(() => {});
-			console.error("Error al registrar imagen:", error);
-			return { error: "No se pudo registrar la imagen" };
-		}
-	}
+	const result = await createProductRow({
+		id: v7(),
+		name,
+		slug,
+		description: description || null,
+		price,
+		// `null` = "autogenera uno" (lo resuelve el DAL), nunca escribe un SKU
+		// nulo: la columna es NOT NULL.
+		sku: skuInput || null,
+		categoryId,
+		imageKey: imageKey || undefined,
+	});
 
-	// 2) Crear el producto; si falla, deshacer todo (imagen en BD y en R2).
-	try {
-		await insertProductWithSkuRetry({
-			id: v7(),
-			name,
-			slug,
-			description: description || null,
-			price,
-			// `null` = "autogenera uno" (lo resuelve `insertProductWithSkuRetry`),
-			// nunca escribe un SKU nulo: la columna es NOT NULL.
-			sku: skuInput || null,
-			categoryId,
-			imageId,
-		});
-	} catch (error) {
-		if (imageId) await cleanupImage(imageId);
-		if (isUniqueViolation(error)) {
-			return { error: "Ya existe un producto con ese nombre, slug o SKU" };
-		}
-		return { error: "No se pudo crear el producto" };
-	}
+	const state = toState(
+		result,
+		"Ya existe un producto con ese nombre, slug o SKU",
+		"No se pudo crear el producto"
+	);
+	if (state) return state;
 
 	revalidatePath("/admin/productos");
 	redirect("/admin/productos");
@@ -285,8 +185,6 @@ export async function updateProduct(
 	_prev: AdminActionState,
 	formData: FormData
 ): Promise<AdminActionState> {
-	if (!(await getAdminSession())) return UNAUTHORIZED;
-
 	const id = String(formData.get("id") ?? "").trim();
 	const name = String(formData.get("name") ?? "").trim();
 	const slugInput = String(formData.get("slug") ?? "").trim();
@@ -303,13 +201,19 @@ export async function updateProduct(
 	if (!price || Number.isNaN(Number(price)) || Number(price) < 0) {
 		return { fieldErrors: { price: "Ingresa un precio válido" } };
 	}
-	if (!categoryId) return { fieldErrors: { categoryId: "Selecciona una categoría" } };
+	if (!categoryId) {
+		return { fieldErrors: { categoryId: "Selecciona una categoría" } };
+	}
 	// El SKU solo se valida si viene informado. `products.sku` es NOT NULL, pero
 	// eso no obliga al admin a reescribirlo en cada edición: si el campo llega
-	// vacío se conserva el que ya tiene la fila (ver el `.set()` de más abajo).
+	// vacío se conserva el que ya tiene la fila.
 	// El autogenerado cubre la creación, donde el campo sí puede omitirse.
 	if (sku && !isValidSku(sku)) {
-		return { fieldErrors: { sku: "El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)" } };
+		return {
+			fieldErrors: {
+				sku: "El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)",
+			},
+		};
 	}
 
 	const slug = resolveSlug(name, slugInput);
@@ -317,78 +221,33 @@ export async function updateProduct(
 		return { fieldErrors: { name: EMPTY_SLUG_ERROR } };
 	}
 
-	const db = getDb();
+	const result = await updateProductRow(id, {
+		name,
+		slug,
+		description: description || null,
+		price,
+		sku,
+		categoryId,
+		imageKey: imageKey || undefined,
+	});
 
-	const [existing] = await db
-		.select({ imageId: products.imageId, sku: products.sku })
-		.from(products)
-		.where(eq(products.id, id))
-		.limit(1);
-
-	// Sin `returning`, un UPDATE sobre un id inexistente no da error: afecta 0
-	// filas y la acción reportaba éxito. Con `returning` comprobamos que la
-	// fila realmente existía y existía antes de subir la imagen nueva.
-	if (!existing) {
-		return { error: "El producto ya no existe. Recarga la página." };
-	}
-
-	// 1) Si hay imagen nueva, registrarla en `images`.
-	let newImageId: string | null = null;
-	if (imageKey) {
-		newImageId = v7();
-		try {
-			await db.insert(images).values({ id: newImageId, key: imageKey });
-		} catch (error) {
-			// La imagen quedó huérfana en R2: eliminarla y fallar sin cambiar nada.
-			await deleteR2Object(imageKey).catch(() => {});
-			console.error("Error al registrar imagen:", error);
-			return { error: "No se pudo registrar la imagen" };
-		}
-	}
-
-	// 2) Actualizar el producto; si falla, deshacer la imagen nueva.
-	try {
-		await db
-			.update(products)
-			.set({
-				name,
-				slug,
-				description: description || null,
-				price,
-				sku: sku || existing.sku,
-				categoryId,
-				imageId: newImageId ?? existing.imageId ?? null,
-			})
-			.where(eq(products.id, id));
-	} catch (error) {
-		if (newImageId) await cleanupImage(newImageId);
-		if (isUniqueViolation(error)) {
-			return { error: "Ya existe un producto con ese nombre, slug o SKU" };
-		}
-		return { error: "No se pudo actualizar el producto" };
-	}
-
-	// 3) Si se reemplazó la imagen, limpiar la anterior (registro + R2).
-	if (newImageId && existing.imageId) {
-		await cleanupImage(existing.imageId);
-	}
+	const state = toState(
+		result,
+		"Ya existe un producto con ese nombre, slug o SKU",
+		"No se pudo actualizar el producto",
+		"El producto ya no existe. Recarga la página."
+	);
+	if (state) return state;
 
 	revalidatePath("/admin/productos");
 	redirect("/admin/productos");
 }
 
 export async function deleteProduct(formData: FormData): Promise<void> {
-	if (!(await getAdminSession())) return;
 	const id = String(formData.get("id") ?? "").trim();
 	if (!id) return;
-	const db = getDb();
-	const [product] = await db
-		.select({ imageId: products.imageId })
-		.from(products)
-		.where(eq(products.id, id))
-		.limit(1);
-	await db.delete(products).where(eq(products.id, id));
-	await cleanupImage(product?.imageId);
+
+	await deleteProductRow(id);
 	revalidatePath("/admin/productos");
 }
 
@@ -400,8 +259,6 @@ export async function createCategory(
 	_prev: AdminActionState,
 	formData: FormData
 ): Promise<AdminActionState> {
-	if (!(await getAdminSession())) return UNAUTHORIZED;
-
 	const name = String(formData.get("name") ?? "").trim();
 	const slugInput = String(formData.get("slug") ?? "").trim();
 	const description = String(formData.get("description") ?? "").trim();
@@ -415,36 +272,20 @@ export async function createCategory(
 		return { fieldErrors: { name: EMPTY_SLUG_ERROR } };
 	}
 
-	// 1) Registrar la imagen en la tabla `images` (la subida a R2 ya ocurrió).
-	let imageId: string | null = null;
-	if (imageKey) {
-		imageId = v7();
-		try {
-			await getDb().insert(images).values({ id: imageId, key: imageKey });
-		} catch (error) {
-			// La imagen quedó huérfana en R2: eliminarla y fallar sin crear nada.
-			await deleteR2Object(imageKey).catch(() => {});
-			console.error("Error al registrar imagen:", error);
-			return { error: "No se pudo registrar la imagen" };
-		}
-	}
+	const result = await createCategoryRow({
+		id: v7(),
+		name,
+		slug,
+		description: description || null,
+		imageKey: imageKey || undefined,
+	});
 
-	// 2) Crear la categoría; si falla, deshacer todo (imagen en BD y en R2).
-	try {
-		await getDb().insert(categories).values({
-			id: v7(),
-			name,
-			slug,
-			description: description || null,
-			imageId,
-		});
-	} catch (error) {
-		if (imageId) await cleanupImage(imageId);
-		if (isUniqueViolation(error)) {
-			return { error: "Ya existe una categoría con ese nombre o slug" };
-		}
-		return { error: "No se pudo crear la categoría" };
-	}
+	const state = toState(
+		result,
+		"Ya existe una categoría con ese nombre o slug",
+		"No se pudo crear la categoría"
+	);
+	if (state) return state;
 
 	revalidatePath("/admin/categorias");
 	redirect("/admin/categorias");
@@ -454,8 +295,6 @@ export async function updateCategory(
 	_prev: AdminActionState,
 	formData: FormData
 ): Promise<AdminActionState> {
-	if (!(await getAdminSession())) return UNAUTHORIZED;
-
 	const id = String(formData.get("id") ?? "").trim();
 	const name = String(formData.get("name") ?? "").trim();
 	const slugInput = String(formData.get("slug") ?? "").trim();
@@ -471,85 +310,30 @@ export async function updateCategory(
 		return { fieldErrors: { name: EMPTY_SLUG_ERROR } };
 	}
 
-	const db = getDb();
+	const result = await updateCategoryRow(id, {
+		name,
+		slug,
+		description: description || null,
+		imageKey: imageKey || undefined,
+	});
 
-	const [existing] = await db
-		.select({ imageId: categories.imageId })
-		.from(categories)
-		.where(eq(categories.id, id))
-		.limit(1);
-
-	// Ver `updateProduct`: un UPDATE sin `returning` sobre un id inexistente
-	// no falla, y la acción terminaba reportando un guardado exitoso.
-	if (!existing) {
-		return { error: "La categoría ya no existe. Recarga la página." };
-	}
-
-	// 1) Si hay imagen nueva, registrarla en `images`.
-	let newImageId: string | null = null;
-	if (imageKey) {
-		newImageId = v7();
-		try {
-			await db.insert(images).values({ id: newImageId, key: imageKey });
-		} catch (error) {
-			// La imagen quedó huérfana en R2: eliminarla y fallar sin cambiar nada.
-			await deleteR2Object(imageKey).catch(() => {});
-			console.error("Error al registrar imagen:", error);
-			return { error: "No se pudo registrar la imagen" };
-		}
-	}
-
-	// 2) Actualizar la categoría; si falla, deshacer la imagen nueva.
-	try {
-		await db
-			.update(categories)
-			.set({
-				name,
-				slug,
-				description: description || null,
-				imageId: newImageId ?? existing.imageId ?? null,
-			})
-			.where(eq(categories.id, id));
-	} catch (error) {
-		if (newImageId) await cleanupImage(newImageId);
-		if (isUniqueViolation(error)) {
-			return { error: "Ya existe una categoría con ese nombre o slug" };
-		}
-		return { error: "No se pudo actualizar la categoría" };
-	}
-
-	// 3) Si se reemplazó la imagen, limpiar la anterior (registro + R2).
-	if (newImageId && existing.imageId) {
-		await cleanupImage(existing.imageId);
-	}
+	const state = toState(
+		result,
+		"Ya existe una categoría con ese nombre o slug",
+		"No se pudo actualizar la categoría",
+		"La categoría ya no existe. Recarga la página."
+	);
+	if (state) return state;
 
 	revalidatePath("/admin/categorias");
 	redirect("/admin/categorias");
 }
 
 export async function deleteCategory(formData: FormData): Promise<void> {
-	if (!(await getAdminSession())) return;
 	const id = String(formData.get("id") ?? "").trim();
 	if (!id) return;
-	const db = getDb();
-	const [category] = await db
-		.select({ imageId: categories.imageId })
-		.from(categories)
-		.where(eq(categories.id, id))
-		.limit(1);
 
-	// Las imágenes de los productos de la categoría también se limpian:
-	// el borrado en cascada elimina los productos pero deja sus imágenes.
-	const productImageIds = await db
-		.select({ imageId: products.imageId })
-		.from(products)
-		.where(eq(products.categoryId, id));
-
-	await db.delete(categories).where(eq(categories.id, id));
-	await cleanupImage(category?.imageId);
-	for (const row of productImageIds) {
-		await cleanupImage(row.imageId);
-	}
+	await deleteCategoryRow(id);
 	revalidatePath("/admin/categorias");
 	revalidatePath("/admin/productos");
 }

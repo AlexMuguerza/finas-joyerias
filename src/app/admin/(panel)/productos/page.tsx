@@ -1,6 +1,7 @@
 import { asc, count, desc, eq } from "drizzle-orm";
 import { getDb } from "@/lib/server/db";
 import { categories, images, products } from "@/db/schema";
+import { imageUrl } from "@/lib/server/media";
 import { formatDate, formatPrice } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -72,7 +73,7 @@ export default async function AdminProductsPage({
 	// cachea Cloudflare: /api/images/<key>.
 	const rowsWithImage = rows.map((row) => ({
 		...row,
-		imageUrl: row.imageKey ? `/api/images/${row.imageKey}` : null,
+		imageUrl: imageUrl(row.imageKey),
 	}));
 
 	return (

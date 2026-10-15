@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { asc, count, eq } from "drizzle-orm";
-import { getDb } from "@/lib/server/db";
-import { categories, images, products } from "@/db/schema";
+import {
+	listCategoriesWithImages,
+	toCategoryCards,
+	type CategoryCard,
+} from "@/lib/server/categories";
 import { RemoteImage } from "@/components/remote-image";
 
 export const dynamic = "force-dynamic";
@@ -23,42 +25,16 @@ export const metadata: Metadata = {
 	},
 };
 
-async function loadCategorias() {
-	const db = getDb();
-
-	return db
-		.select({
-			id: categories.id,
-			name: categories.name,
-			slug: categories.slug,
-			description: categories.description,
-			imageKey: images.key,
-			productCount: count(products.id),
-		})
-		.from(categories)
-		.leftJoin(images, eq(images.id, categories.imageId))
-		.leftJoin(products, eq(products.categoryId, categories.id))
-		.groupBy(
-			categories.id,
-			categories.name,
-			categories.slug,
-			categories.description,
-			images.id,
-			images.key
-		)
-		.orderBy(asc(categories.name));
-}
-
 export default async function CategoriasPage() {
 	// El fallo se degrada a una lista vacía en vez de reventar con 500, pero se
 	// marca aparte: el mensaje de "aún no hay colecciones" es una afirmación
 	// comercial, y reutilizarlo durante una caída de la base de datos
 	// convertiría un incidente técnico en una mentira hacia el cliente.
-	let rows: Awaited<ReturnType<typeof loadCategorias>> = [];
+	let rows: CategoryCard[] = [];
 	let dbFailed = false;
 
 	try {
-		rows = await loadCategorias();
+		rows = toCategoryCards(await listCategoriesWithImages());
 	} catch (error) {
 		dbFailed = true;
 		console.error("[categorias] No se pudieron cargar las colecciones:", error);
@@ -91,9 +67,9 @@ export default async function CategoriasPage() {
 									href={`/shop?categoria=${encodeURIComponent(cat.slug)}`}
 									className="group relative block aspect-[4/5] overflow-hidden bg-soft-pink"
 								>
-									{cat.imageKey ? (
+									{cat.imageUrl ? (
 										<RemoteImage
-											src={`/api/images/${cat.imageKey}`}
+											src={cat.imageUrl}
 											alt={`Colección de ${cat.name} - Finas Joyería`}
 											containerClassName="absolute inset-0"
 											imgClassName="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110"

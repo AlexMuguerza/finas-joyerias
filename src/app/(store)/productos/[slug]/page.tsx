@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { and, desc, eq, ne, not } from "drizzle-orm";
 import Link from "next/link";
-import { getDb } from "@/lib/server/db";
-import { categories, images, products } from "@/db/schema";
+import {
+	getProductBySlug,
+	listRelatedProducts,
+} from "@/lib/server/products";
+import { imageUrl, SEVEN_DAYS_MS } from "@/lib/server/media";
 import { formatPrice } from "@/lib/format";
 import { ProductCard } from "@/components/shop/product-card";
 import { ProductActions } from "@/components/shop/product-actions";
@@ -11,47 +13,37 @@ import { RemoteImage } from "@/components/remote-image";
 
 export const dynamic = "force-dynamic";
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-
 export async function generateMetadata({
 	params,
 }: {
 	params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
 	const { slug } = await params;
-	const db = getDb();
-	const row = await db
-		.select({
-			name: products.name,
-			description: products.description,
-			imageKey: images.key,
-		})
-		.from(products)
-		.leftJoin(images, eq(images.id, products.imageId))
-		.where(eq(products.slug, slug))
-		.limit(1);
 
-	if (row.length === 0) return {};
+	// Comparte consulta con el cuerpo de la página gracias a `cache()` en el
+	// DAL: antes cada uno hacía su propio `select`, y al proyectar columnas
+	// distintas React no los deduplicaba. Dos viajes a Neon para pintar un
+	// `<title>`.
+	const product = await getProductBySlug(slug);
 
-	const product = row[0];
+	if (!product) return {};
+
 	const url = `/productos/${slug}`;
+	const description =
+		product.description ??
+		`Compra ${product.name} en Finas Joyería. Joyería fina y exclusiva.`;
+	const image = imageUrl(product.imageKey);
 
 	return {
 		title: `${product.name} | Finas Joyería`,
-		description:
-			product.description ??
-			`Compra ${product.name} en Finas Joyería. Joyería fina y exclusiva.`,
+		description,
 		alternates: { canonical: url },
 		openGraph: {
 			type: "website",
 			title: `${product.name} | Finas Joyería`,
-			description:
-				product.description ??
-				`Compra ${product.name} en Finas Joyería.`,
+			description,
 			url,
-			images: product.imageKey
-				? [{ url: `/api/images/${product.imageKey}` }]
-				: undefined,
+			images: image ? [{ url: image }] : undefined,
 		},
 	};
 }
@@ -62,7 +54,6 @@ export default async function ProductPage({
 	params: Promise<{ slug: string }>;
 }) {
 	const { slug } = await params;
-	const db = getDb();
 	// Un único "ahora" para el badge del producto y el de los relacionados, que
 	// antes comparaban contra dos instantes distintos.
 	//
@@ -71,29 +62,13 @@ export default async function ProductPage({
 	// Client Components, donde un render impure sí provoca desajuste.
 	// eslint-disable-next-line react-hooks/purity
 	const now = Date.now();
+	const since = new Date(now - SEVEN_DAYS_MS);
 
-	let rows;
+	let product;
 	try {
-		rows = await db
-			.select({
-				id: products.id,
-				name: products.name,
-				slug: products.slug,
-				description: products.description,
-				price: products.price,
-				sku: products.sku,
-				categoryId: products.categoryId,
-				categoryName: categories.name,
-				categorySlug: categories.slug,
-				imageKey: images.key,
-				imageAlt: images.altText,
-				createdAt: products.createdAt,
-			})
-			.from(products)
-			.leftJoin(categories, eq(products.categoryId, categories.id))
-			.leftJoin(images, eq(images.id, products.imageId))
-			.where(eq(products.slug, slug))
-			.limit(1);
+		// Deduplicado por `cache()`: es la misma llamada que hace
+		// `generateMetadata`, así que ambas comparten una única consulta.
+		product = await getProductBySlug(slug);
 	} catch (error) {
 		// Aquí NO se degrada a 404, a diferencia de `/shop` y `/categorias`. Un
 		// fallo de base de datos no significa que el producto no exista, y
@@ -104,78 +79,33 @@ export default async function ProductPage({
 		throw error;
 	}
 
-	if (rows.length === 0) {
+	if (!product) {
+		// Aquí sí: la consulta funcionó y no había fila. 404 legítimo.
 		notFound();
 	}
 
-	const product = rows[0];
 	const isNew = product.createdAt.getTime() >= now - SEVEN_DAYS_MS;
 
 	// Relacionados: primero los de la misma categoría; si faltan para llenar
 	// la fila (máx. 8), se completan con los más recientes de otras
 	// categorías (complementos). Máximo 2 consultas acotadas, sin N+1.
-	const RELATED_COLUMNS = {
-		id: products.id,
-		name: products.name,
-		slug: products.slug,
-		price: products.price,
-		sku: products.sku,
-		categoryName: categories.name,
-		imageUrl: images.key,
-		imageAlt: images.altText,
-		createdAt: products.createdAt,
-	};
-
 	const MAX_RELATED = 8;
 
-	const relatedRows = await db
-		.select(RELATED_COLUMNS)
-		.from(products)
-		.leftJoin(categories, eq(products.categoryId, categories.id))
-		.leftJoin(images, eq(images.id, products.imageId))
-		.where(
-			and(eq(products.categoryId, product.categoryId), ne(products.id, product.id))
-		)
-		.orderBy(desc(products.createdAt))
-		.limit(MAX_RELATED);
-
-	if (relatedRows.length < MAX_RELATED) {
-		const remaining = MAX_RELATED - relatedRows.length;
-		const fillRows = await db
-			.select(RELATED_COLUMNS)
-			.from(products)
-			.leftJoin(categories, eq(products.categoryId, categories.id))
-			.leftJoin(images, eq(images.id, products.imageId))
-			.where(
-				and(ne(products.id, product.id), not(eq(products.categoryId, product.categoryId)))
-			)
-			.orderBy(desc(products.createdAt))
-			.limit(remaining);
-		relatedRows.push(...fillRows);
-	}
-
-	const related = relatedRows.map((p) => ({
-		id: p.id,
-		name: p.name,
-		slug: p.slug,
-		price: p.price,
-		sku: p.sku,
-		categoryName: p.categoryName,
-		imageUrl: p.imageUrl ? `/api/images/${p.imageUrl}` : null,
-		imageAlt: p.imageAlt,
-		isNew: p.createdAt.getTime() >= now - SEVEN_DAYS_MS,
-	}));
+	const related = await listRelatedProducts({
+		categoryId: product.categoryId,
+		excludeId: product.id,
+		since,
+		limit: MAX_RELATED,
+	});
 
 	const productUrl = `/productos/${product.slug}`;
-	const imageUrl = product.imageKey
-		? `/api/images/${product.imageKey}`
-		: null;
+	const productImageUrl = imageUrl(product.imageKey);
 
 	const jsonLd = {
 		"@context": "https://schema.org",
 		"@type": "Product",
 		name: product.name,
-		image: imageUrl ? [imageUrl] : undefined,
+		image: productImageUrl ? [productImageUrl] : undefined,
 		description: product.description ?? undefined,
 		brand: { "@type": "Brand", name: "Finas Joyería" },
 		category: product.categoryName ?? undefined,
@@ -242,9 +172,9 @@ export default async function ProductPage({
 				<div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
 					{/* Imagen */}
 					<div className="relative aspect-square overflow-hidden bg-soft-pink">
-						{imageUrl ? (
+						{productImageUrl ? (
 							<RemoteImage
-								src={imageUrl}
+								src={productImageUrl}
 								alt={product.imageAlt ?? product.name}
 								containerClassName="h-full w-full"
 								sizes="(min-width: 1024px) 46vw, 92vw"
@@ -296,7 +226,7 @@ export default async function ProductPage({
 									slug: product.slug,
 									sku: product.sku,
 									price: Number(product.price),
-									imageUrl,
+									imageUrl: productImageUrl,
 								}}
 								variant="detail"
 							/>

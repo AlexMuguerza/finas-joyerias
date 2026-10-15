@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { count, desc, eq } from "drizzle-orm";
+import { count } from "drizzle-orm";
 import { getDb } from "@/lib/server/db";
 import { categories, images, products, user } from "@/db/schema";
+import { listRecentProducts } from "@/lib/server/products";
 import { formatDate, formatPrice } from "@/lib/format";
 import {
 	Card,
@@ -21,27 +22,14 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-	const db = getDb();
-
-	const [userCount, productCount, categoryCount, imageCount] = await Promise.all([
-		db.select({ value: count() }).from(user),
-		db.select({ value: count() }).from(products),
-		db.select({ value: count() }).from(categories),
-		db.select({ value: count() }).from(images),
-	]);
-
-	const recentProducts = await db
-		.select({
-			id: products.id,
-			name: products.name,
-			price: products.price,
-			categoryName: categories.name,
-			createdAt: products.createdAt,
-		})
-		.from(products)
-		.leftJoin(categories, eq(products.categoryId, categories.id))
-		.orderBy(desc(products.createdAt))
-		.limit(5);
+	const [userCount, productCount, categoryCount, imageCount, recentProducts] =
+		await Promise.all([
+			getDb().select({ value: count() }).from(user),
+			getDb().select({ value: count() }).from(products),
+			getDb().select({ value: count() }).from(categories),
+			getDb().select({ value: count() }).from(images),
+			listRecentProducts(5),
+		]);
 
 	const stats = [
 		{ label: "Usuarios", value: userCount[0]?.value ?? 0, href: "/admin/usuarios" },
