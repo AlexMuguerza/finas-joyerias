@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { BanIcon, UnlockIcon } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -25,6 +25,9 @@ import {
 } from "@/components/ui/table";
 import { DeleteDialog } from "./delete-dialog";
 import { UserDialog } from "./user-dialog";
+import { AdminPagination } from "./pagination";
+
+const PAGE_SIZE = 20;
 
 interface AdminUser {
 	id: string;
@@ -38,9 +41,13 @@ interface AdminUser {
 export function UsersTable({
 	currentUserId,
 	adminCount,
+	page,
+	searchParams,
 }: {
 	currentUserId: string;
 	adminCount: number;
+	page: number;
+	searchParams: Record<string, string | string[] | undefined>;
 }) {
 	const [users, setUsers] = useState<AdminUser[]>([]);
 	// El primer `load()` ya arranca con `loading: true` (estado inicial), así
@@ -48,21 +55,36 @@ export function UsersTable({
 	// efecto de montaje y un render extra innecesario.
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [total, setTotal] = useState(0);
 
 	// Único admin en el sistema: su selector de rol queda bloqueado.
 	const isLastAdmin = adminCount <= 1;
 
+	// Una sola definición de la consulta, reutilizada por el `load()` de refresco
+	// y por el fetch de montaje. Antes se pedían 100 usuarios de golpe, sin
+	// paginar: con la tabla abierta el panel cargaba de más y el recuento de la
+	// cabecera mentía.
+	//
+	// Va en `useMemo` para que la referencia sea estable entre renders: si el
+	// objeto se recreara siempre, tendría que ir en las dependencias de los
+	// hooks y estos se re-ejecutarían en cada render.
+	const query = useMemo(
+		() => ({ limit: PAGE_SIZE, page }),
+		[page]
+	);
+
 	const load = useCallback(async () => {
-		const res = await authClient.admin.listUsers({ query: { limit: 100 } });
+		const res = await authClient.admin.listUsers({ query });
 		if (res.error) {
 			setLoading(false);
 			setError(res.error.message ?? "Error al cargar los usuarios");
 			return;
 		}
 		setUsers(res.data?.users ?? []);
+		setTotal(res.data?.total ?? 0);
 		setLoading(false);
 		setError(null);
-	}, []);
+	}, [query]);
 
 	// El fetch inicial vive en el efecto (y no en `load`) para poder ignorar
 	// la respuesta si el componente se desmonta antes de que llegue: antes,
@@ -72,7 +94,7 @@ export function UsersTable({
 		let ignore = false;
 
 		(async () => {
-			const res = await authClient.admin.listUsers({ query: { limit: 100 } });
+			const res = await authClient.admin.listUsers({ query });
 			if (ignore) return;
 			if (res.error) {
 				setError(res.error.message ?? "Error al cargar los usuarios");
@@ -80,6 +102,7 @@ export function UsersTable({
 				return;
 			}
 			setUsers(res.data?.users ?? []);
+			setTotal(res.data?.total ?? 0);
 			setLoading(false);
 			setError(null);
 		})();
@@ -87,7 +110,7 @@ export function UsersTable({
 		return () => {
 			ignore = true;
 		};
-	}, []);
+	}, [query]);
 
 	async function changeRole(userId: string, role: "admin" | "user") {
 		// Bloqueo duro: degradar al único admin deja el panel inaccesible
@@ -183,7 +206,7 @@ export function UsersTable({
 			<Card>
 				<CardHeader>
 					<CardTitle className="text-sm font-medium text-muted-foreground">
-						{loading ? "Cargando…" : `${users.length} usuarios`}
+						{loading ? "Cargando…" : `${total} usuario${total === 1 ? "" : "s"}`}
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
@@ -203,7 +226,10 @@ export function UsersTable({
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{users.length === 0 && !loading ? (
+								{/* El "vacío" se decide por el total, no por las filas de esta
+								    página: con paginación, una página fuera de rango tendría
+								    0 filas sin que quedara nadie registrado. */}
+								{users.length === 0 && !loading && total === 0 ? (
 									<TableRow>
 										<TableCell
 											colSpan={5}
@@ -310,6 +336,14 @@ export function UsersTable({
 					)}
 				</CardContent>
 			</Card>
+
+			<AdminPagination
+				basePath="/admin/usuarios"
+				searchParams={searchParams}
+				page={page}
+				totalItems={total}
+				pageSize={PAGE_SIZE}
+			/>
 		</div>
 	);
 }

@@ -42,6 +42,7 @@ export function ImageThumbnail({
 					src={src}
 					alt={alt}
 					containerClassName="h-10 w-10"
+					sizes="40px"
 					fallback={
 						<div className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground">
 							<ImageOffIcon className="h-4 w-4" strokeWidth={1.5} />
@@ -54,11 +55,15 @@ export function ImageThumbnail({
 					<DialogTitle>{alt}</DialogTitle>
 					<DialogDescription>{description}</DialogDescription>
 				</DialogHeader>
+				{/* `aspect-[4/3]` y no `w-full` suelto: `RemoteImage` posiciona la
+				    imagen en absoluto, y sin una altura definitiva el contenedor
+				    colapsaría a 0 y no se vería nada. */}
 				<RemoteImage
 					src={src}
 					alt={alt}
-					containerClassName="w-full"
-					imgClassName="max-h-[70vh] w-full rounded-lg object-contain"
+					containerClassName="aspect-[4/3] w-full"
+					imgClassName="rounded-lg object-contain"
+					sizes="(min-width: 640px) 32rem, 92vw"
 					eager
 				/>
 			</DialogContent>

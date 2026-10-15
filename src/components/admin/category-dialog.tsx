@@ -223,6 +223,7 @@ export function CategoryDialog({
 										alt="Vista previa"
 										containerClassName="h-full w-full"
 										imgClassName="object-cover"
+										sizes="160px"
 									/>
 								) : (
 									<ImageIcon className="size-6 text-muted-foreground" />

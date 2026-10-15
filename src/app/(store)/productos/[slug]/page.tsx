@@ -72,26 +72,37 @@ export default async function ProductPage({
 	// eslint-disable-next-line react-hooks/purity
 	const now = Date.now();
 
-	const rows = await db
-		.select({
-			id: products.id,
-			name: products.name,
-			slug: products.slug,
-			description: products.description,
-			price: products.price,
-			sku: products.sku,
-			categoryId: products.categoryId,
-			categoryName: categories.name,
-			categorySlug: categories.slug,
-			imageKey: images.key,
-			imageAlt: images.altText,
-			createdAt: products.createdAt,
-		})
-		.from(products)
-		.leftJoin(categories, eq(products.categoryId, categories.id))
-		.leftJoin(images, eq(images.id, products.imageId))
-		.where(eq(products.slug, slug))
-		.limit(1);
+	let rows;
+	try {
+		rows = await db
+			.select({
+				id: products.id,
+				name: products.name,
+				slug: products.slug,
+				description: products.description,
+				price: products.price,
+				sku: products.sku,
+				categoryId: products.categoryId,
+				categoryName: categories.name,
+				categorySlug: categories.slug,
+				imageKey: images.key,
+				imageAlt: images.altText,
+				createdAt: products.createdAt,
+			})
+			.from(products)
+			.leftJoin(categories, eq(products.categoryId, categories.id))
+			.leftJoin(images, eq(images.id, products.imageId))
+			.where(eq(products.slug, slug))
+			.limit(1);
+	} catch (error) {
+		// Aquí NO se degrada a 404, a diferencia de `/shop` y `/categorias`. Un
+		// fallo de base de datos no significa que el producto no exista, y
+		// devolver 404 en ese caso mentiría al cliente y podría llevar al
+		// crawler a desindexar la URL. Se propaga al `error.tsx` del segmento,
+		// que ofrece reintentar.
+		console.error(`[producto] No se pudo cargar "${slug}":`, error);
+		throw error;
+	}
 
 	if (rows.length === 0) {
 		notFound();
@@ -236,6 +247,7 @@ export default async function ProductPage({
 								src={imageUrl}
 								alt={product.imageAlt ?? product.name}
 								containerClassName="h-full w-full"
+								sizes="(min-width: 1024px) 46vw, 92vw"
 								eager
 							/>
 						) : (

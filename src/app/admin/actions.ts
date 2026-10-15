@@ -160,6 +160,10 @@ type ProductInsert = typeof products.$inferInsert;
  *
  * Un SKU escrito a mano nunca se reintenta: si está duplicado, es un error
  * real que hay que reportar tal cual.
+ *
+ * `sku` es NOT NULL en el schema: el `null` de la entrada significa
+ * "autogenera uno", nunca "escribe null". El INSERT de la línea siguiente
+ * siempre recibe un string resuelto.
  */
 async function insertProductWithSkuRetry(
 	values: Omit<ProductInsert, "sku"> & { sku?: string | null }
@@ -259,6 +263,8 @@ export async function createProduct(
 			slug,
 			description: description || null,
 			price,
+			// `null` = "autogenera uno" (lo resuelve `insertProductWithSkuRetry`),
+			// nunca escribe un SKU nulo: la columna es NOT NULL.
 			sku: skuInput || null,
 			categoryId,
 			imageId,
@@ -298,9 +304,10 @@ export async function updateProduct(
 		return { fieldErrors: { price: "Ingresa un precio válido" } };
 	}
 	if (!categoryId) return { fieldErrors: { categoryId: "Selecciona una categoría" } };
-	// El SKU solo se valida si viene informado: `products.sku` admite NULL
-	// (columna nullable) y hay registros previos a la migración que lo tienen.
-	// Si se envía vacío, se conserva el SKU ya generado en vez de fallar.
+	// El SKU solo se valida si viene informado. `products.sku` es NOT NULL, pero
+	// eso no obliga al admin a reescribirlo en cada edición: si el campo llega
+	// vacío se conserva el que ya tiene la fila (ver el `.set()` de más abajo).
+	// El autogenerado cubre la creación, donde el campo sí puede omitirse.
 	if (sku && !isValidSku(sku)) {
 		return { fieldErrors: { sku: "El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)" } };
 	}

@@ -121,6 +121,7 @@ const CategoryCard = ({ category }: { category: LandingCategory }) => {
 					alt={`Colección de ${category.name} - Finas Joyería`}
 					containerClassName="absolute inset-0"
 					imgClassName="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110"
+					sizes="(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 92vw"
 				/>
 			) : (
 				<div className="absolute inset-0 flex items-center justify-center font-heading text-6xl font-light text-primary">

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { MinusIcon, PlusIcon, TrashIcon } from "lucide-react";
+import { RemoteImage } from "@/components/remote-image";
 import { cartTotal, useCart, type CartItem, MAX_QUANTITY_PER_ITEM } from "@/lib/cart";
 import { useIsMounted } from "@/lib/use-is-mounted";
 import { formatPrice } from "@/lib/format";
@@ -33,12 +33,15 @@ function CartRow({ item }: { item: CartItem }) {
 				className="relative h-24 w-24 flex-none overflow-hidden bg-soft-pink"
 			>
 				{item.imageUrl ? (
-					<Image
+					/* `RemoteImage` y no `next/image` directo: además del
+					   responsive, aporta skeleton y fallback. Aquí importa de
+					   verdad, porque una foto borrada de R2 dejaba el icono de
+					   imagen rota del navegador dentro del carrito. */
+					<RemoteImage
 						src={item.imageUrl}
 						alt={item.name}
-						fill
+						containerClassName="h-full w-full"
 						sizes="96px"
-						className="object-cover"
 					/>
 				) : (
 					<div className="flex h-full w-full items-center justify-center text-[9px] tracking-widest text-muted-foreground uppercase">

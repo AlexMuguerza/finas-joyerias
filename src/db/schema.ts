@@ -146,9 +146,12 @@ export const products = pgTable(
     description: text("description"),
     price: numeric("price", { precision: 10, scale: 2 }).notNull(),
     // SKU alfanumérico con formato `AAA-9999` (8 caracteres, ver `generateSku`).
-    // Nullable: las filas creadas antes de la migración 0001 no lo tienen.
-    // Único en BD (Postgres permite varios NULL en una columna UNIQUE).
-    sku: text("sku").unique(),
+    // Obligatorio y único: `createProduct` lo autogenera desde el nombre de la
+    // categoría cuando no se informa, así que siempre hay uno. La columna pasó
+    // a NOT NULL en el schema; el `ALTER` correspondiente en la BD requiere
+    // `pnpm db:push` (o una migración nueva), porque hasta entonces la base
+    // sigue admitiendo NULL aunque los tipos ya no lo prometan.
+    sku: text("sku").notNull().unique(),
     categoryId: text("category_id")
       .notNull()
       .references(() => categories.id, { onDelete: "cascade" }),

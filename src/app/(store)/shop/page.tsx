@@ -3,7 +3,9 @@ import { and, asc, count, desc, eq, gte, ilike } from "drizzle-orm";
 import { getDb } from "@/lib/server/db";
 import { categories, images, products } from "@/db/schema";
 import { ProductCard } from "@/components/shop/product-card";
+import type { ShopProduct } from "@/components/shop/product-card";
 import { CatalogToolbar } from "@/components/shop/catalog-toolbar";
+import type { CatalogCategory } from "@/components/shop/catalog-toolbar";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +40,6 @@ export default async function ShopPage({
 	searchParams: Promise<SearchParams>;
 }) {
 	const { categoria, q, featured, orden } = await searchParams;
-	const db = getDb();
 	// Un único "ahora" para todo el render. Antes, el filtro de novedades y
 	// cada badge "Nuevo" llamaban a `Date.now()` por separado: en el borde de
 	// los 7 días un producto podía entrar en el filtro y salir sin la etiqueta
@@ -51,95 +52,110 @@ export default async function ShopPage({
 	// eslint-disable-next-line react-hooks/purity
 	const now = Date.now();
 
-	// Conteo de productos por categoría (independiente del filtro activo).
-	const countsByCategory = await db
-		.select({ categoryId: products.categoryId, total: count(products.id) })
-		.from(products)
-		.groupBy(products.categoryId);
-
-	const countMap = new Map(
-		countsByCategory.map((c) => [c.categoryId, c.total])
-	);
-
-	const categoryRows = await db
-		.select({
-			id: categories.id,
-			name: categories.name,
-			slug: categories.slug,
-		})
-		.from(categories)
-		.orderBy(asc(categories.name));
-
-	// Filtros server-side.
+	// Filtros server-side. Se construyen antes de consultar para poder aplicarlos
+	// dentro del `try`.
 	const conditions = [];
 
-	if (categoria) {
-		const found = categoryRows.find((c) => c.slug === categoria);
-		if (found) {
-			conditions.push(eq(products.categoryId, found.id));
-		} else {
-			// Categoría inexistente → sin resultados.
-			conditions.push(eq(products.id, ""));
-		}
-	}
+	// Un fallo de la base de datos no debe dejar el catálogo entero en 500: en
+	// un plan gratuito de Neon los cortes son relativos frecuencia. Se
+	// distingue "no hay productos" de "no pudimos consultar", porque un
+	// catálogo vacío sin explicación se lee como una tienda vacía y Madden
+	// clientes reales.
+	let productCards: ShopProduct[] = [];
+	let chips: CatalogCategory[] = [];
+	let dbFailed = false;
 
-	if (q && q.trim()) {
-		conditions.push(ilike(products.name, `%${q.trim()}%`));
-	}
+	try {
+		const db = getDb();
 
-	// "featured": por ahora = piezas creadas hace menos de 7 días
-	// (decisión de producto: no tocar el schema todavía).
-	if (featured === "1") {
-		conditions.push(
-			gte(products.createdAt, new Date(now - SEVEN_DAYS_MS))
+		// Conteo de productos por categoría (independiente del filtro activo).
+		const countsByCategory = await db
+			.select({ categoryId: products.categoryId, total: count(products.id) })
+			.from(products)
+			.groupBy(products.categoryId);
+
+		const countMap = new Map(
+			countsByCategory.map((c) => [c.categoryId, c.total])
 		);
+
+		const categoryRows = await db
+			.select({
+				id: categories.id,
+				name: categories.name,
+				slug: categories.slug,
+			})
+			.from(categories)
+			.orderBy(asc(categories.name));
+
+		if (categoria) {
+			const found = categoryRows.find((c) => c.slug === categoria);
+			if (found) {
+				conditions.push(eq(products.categoryId, found.id));
+			} else {
+				// Categoría inexistente → sin resultados.
+				conditions.push(eq(products.id, ""));
+			}
+		}
+
+		if (q && q.trim()) {
+			conditions.push(ilike(products.name, `%${q.trim()}%`));
+		}
+
+		// "featured": por ahora = piezas creadas hace menos de 7 días
+		// (decisión de producto: no tocar el schema todavía).
+		if (featured === "1") {
+			conditions.push(gte(products.createdAt, new Date(now - SEVEN_DAYS_MS)));
+		}
+
+		const orderBy =
+			orden === "precio-asc"
+				? [asc(products.price)]
+				: orden === "precio-desc"
+					? [desc(products.price)]
+					: orden === "nombre"
+						? [asc(products.name)]
+						: [desc(products.createdAt)];
+
+		const rows = await db
+			.select({
+				id: products.id,
+				name: products.name,
+				slug: products.slug,
+				price: products.price,
+				sku: products.sku,
+				categoryId: products.categoryId,
+				categoryName: categories.name,
+				imageUrl: images.key,
+				imageAlt: images.altText,
+				createdAt: products.createdAt,
+			})
+			.from(products)
+			.leftJoin(categories, eq(products.categoryId, categories.id))
+			.leftJoin(images, eq(images.id, products.imageId))
+			.where(and(...conditions))
+			.orderBy(...orderBy);
+
+		productCards = rows.map((p) => ({
+			id: p.id,
+			name: p.name,
+			slug: p.slug,
+			price: p.price,
+			sku: p.sku,
+			categoryName: p.categoryName,
+			imageUrl: p.imageUrl ? `/api/images/${p.imageUrl}` : null,
+			imageAlt: p.imageAlt,
+			isNew: p.createdAt.getTime() >= now - SEVEN_DAYS_MS,
+		}));
+
+		chips = categoryRows.map((c) => ({
+			slug: c.slug,
+			name: c.name,
+			count: countMap.get(c.id) ?? 0,
+		}));
+	} catch (error) {
+		dbFailed = true;
+		console.error("[shop] No se pudo cargar el catálogo:", error);
 	}
-
-	const orderBy =
-		orden === "precio-asc"
-			? [asc(products.price)]
-			: orden === "precio-desc"
-				? [desc(products.price)]
-				: orden === "nombre"
-					? [asc(products.name)]
-					: [desc(products.createdAt)];
-
-	const rows = await db
-		.select({
-			id: products.id,
-			name: products.name,
-			slug: products.slug,
-			price: products.price,
-			sku: products.sku,
-			categoryId: products.categoryId,
-			categoryName: categories.name,
-			imageUrl: images.key,
-			imageAlt: images.altText,
-			createdAt: products.createdAt,
-		})
-		.from(products)
-		.leftJoin(categories, eq(products.categoryId, categories.id))
-		.leftJoin(images, eq(images.id, products.imageId))
-		.where(and(...conditions))
-		.orderBy(...orderBy);
-
-	const productCards = rows.map((p) => ({
-		id: p.id,
-		name: p.name,
-		slug: p.slug,
-		price: p.price,
-		sku: p.sku,
-		categoryName: p.categoryName,
-		imageUrl: p.imageUrl ? `/api/images/${p.imageUrl}` : null,
-		imageAlt: p.imageAlt,
-		isNew: p.createdAt.getTime() >= now - SEVEN_DAYS_MS,
-	}));
-
-	const chips = categoryRows.map((c) => ({
-		slug: c.slug,
-		name: c.name,
-		count: countMap.get(c.id) ?? 0,
-	}));
 
 	return (
 		<>
@@ -162,11 +178,16 @@ export default async function ShopPage({
 			{/* Contenido */}
 			<section className="bg-cream pb-24">
 				<div className="mx-auto max-w-7xl px-6 lg:px-8">
-					<CatalogToolbar
-						categories={chips}
-						filters={{ categoria, q, featured, orden }}
-						total={rows.length}
-					/>
+					{/* Con la base de datos caída no se muestra la barra de filtros:
+					    los recuentos por categoría serían 0 y el usuario filtraría
+					    sobre datos inexistentes. */}
+					{!dbFailed && (
+						<CatalogToolbar
+							categories={chips}
+							filters={{ categoria, q, featured, orden }}
+							total={productCards.length}
+						/>
+					)}
 
 					{/* Grid de productos */}
 					{productCards.length > 0 ? (
@@ -174,6 +195,17 @@ export default async function ShopPage({
 							{productCards.map((product) => (
 								<ProductCard key={product.id} product={product} />
 							))}
+						</div>
+					) : dbFailed ? (
+						<div className="mt-12 rounded-xl border border-dashed bg-white/60 px-6 py-20 text-center">
+							<p className="font-heading text-2xl font-light text-heading">
+								No pudimos cargar el catálogo
+							</p>
+							<p className="mx-auto mt-2 max-w-md font-body text-sm text-muted-foreground">
+								Es un problema puntual de conexión con nuestro servidor.
+								Recarga la página en unos segundos o escríbenos por
+								WhatsApp mientras tanto.
+							</p>
 						</div>
 					) : (
 						<div className="mt-12 rounded-xl border border-dashed bg-white/60 px-6 py-20 text-center">

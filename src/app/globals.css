@@ -190,7 +190,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar {
+  /* `width` controla el grosor de la barra VERTICAL y `height` el de la
+     HORIZONTAL: no son intercambiables, y el valor por defecto del navegador
+     para `height` es de unos 15px. Sin declararlo, la barra horizontal salía
+     tres veces más gruesa que la vertical. */
   width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {

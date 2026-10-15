@@ -132,9 +132,9 @@ export function ProductDialog({
 			return;
 		}
 		const trimmedSku = sku.trim().toUpperCase();
-		// Solo se valida si viene informado: `products.sku` admite NULL y hay
-		// registros previos a la migración que lo tienen vacío. Si se deja en
-		// blanco, el servidor conserva el SKU existente.
+		// Solo se valida si viene informado. El SKU es obligatorio en la tabla,
+		// pero no hace falta reescribirlo: si se deja en blanco, el servidor
+		// conserva el existente (al crear, lo autogenera).
 		if (trimmedSku && !/^[A-Z0-9]{3}-[A-Z0-9]{4}$/.test(trimmedSku)) {
 			setError("El SKU debe tener el formato AAA-9999 (3 caracteres, guion, 4 caracteres)");
 			return;
@@ -267,6 +267,7 @@ export function ProductDialog({
 										alt="Vista previa"
 										containerClassName="h-full w-full"
 										imgClassName="object-cover"
+										sizes="160px"
 									/>
 								) : (
 									<ImageIcon className="size-6 text-muted-foreground" />

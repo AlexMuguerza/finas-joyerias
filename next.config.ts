@@ -1,12 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-	/* config options here */
 	images: {
-		remotePatterns: [
-			{ protocol: "https", hostname: "images.unsplash.com" },
-			{ protocol: "https", hostname: "images.pexels.com" },
-		],
+		// Sin `remotePatterns`: todas las imágenes del catálogo llegan por
+		// `/api/images/<key>` (R2 a través del worker), que es una ruta local y
+		// por tanto no necesita permiso de host externo. Los patrones de
+		// unsplash/pexels que había aquí.allowlistaban dos orígenes que ninguna
+		// parte del proyecto usa.
+		formats: ["image/avif", "image/webp"],
 	},
 };
 

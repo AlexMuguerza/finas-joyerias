@@ -1,15 +1,22 @@
 "use client"
 
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
-const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
-
+/**
+ * Sin `useTheme()` a propósito. Este sitio es de tema claro por diseño (paleta
+ * crema/oro, sin variantes `dark:` en el sistema) y nunca se montó un
+ * `ThemeProvider`, así que la llamada devolvía siempre el valor por defecto.
+ * Además `providers.tsx` pasa `theme="light"` y `{...props}` se expande al
+ * final, con lo que ganaba sobre cualquier valor interno.
+ *
+ * Para activar modo oscuro habría que montar `ThemeProvider` en el layout
+ * raíz y redefinir la paleta completa, no solo este componente.
+ */
+const Toaster = ({ theme = "light", ...props }: ToasterProps) => {
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme={theme}
       className="toaster group"
       icons={{
         success: (

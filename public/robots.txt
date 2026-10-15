@@ -1,5 +1,24 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
+
+# Rutas públicas.
 Allow: /
+
+# Panel de administración: expone nombres de usuarios, rutas internas y el
+# diseño del panel. No aporta nada en buscadores.
+Disallow: /admin
+
+# Autenticación: no indexar login ni recuperación de contraseña.
+Disallow: /auth
+
+# API interna.
+Disallow: /api
+
+# Salvedad importante: las fotos de producto se sirven por /api/images/<key>
+# porque R2 no tiene dominio público. Este proyecto NO usa otro host para las
+# imágenes, así que bloquear /api sin esta excepción las dejaría fuera de
+# Google Images, que en joyería es un canal de venta directo. La regla más
+# específica gana, así que estas imágenes sí se rastrean.
+Allow: /api/images
 
 Sitemap: https://finasjoyerias.zfd.app/sitemap.xml

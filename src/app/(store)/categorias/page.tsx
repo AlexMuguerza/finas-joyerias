@@ -23,11 +23,10 @@ export const metadata: Metadata = {
 	},
 };
 
-export default async function CategoriasPage() {
+async function loadCategorias() {
 	const db = getDb();
 
-	// Una sola consulta: categoría + su imagen + conteo de productos.
-	const rows = await db
+	return db
 		.select({
 			id: categories.id,
 			name: categories.name,
@@ -39,8 +38,31 @@ export default async function CategoriasPage() {
 		.from(categories)
 		.leftJoin(images, eq(images.id, categories.imageId))
 		.leftJoin(products, eq(products.categoryId, categories.id))
-		.groupBy(categories.id, categories.name, categories.slug, categories.description, images.id, images.key)
+		.groupBy(
+			categories.id,
+			categories.name,
+			categories.slug,
+			categories.description,
+			images.id,
+			images.key
+		)
 		.orderBy(asc(categories.name));
+}
+
+export default async function CategoriasPage() {
+	// El fallo se degrada a una lista vacía en vez de reventar con 500, pero se
+	// marca aparte: el mensaje de "aún no hay colecciones" es una afirmación
+	// comercial, y reutilizarlo durante una caída de la base de datos
+	// convertiría un incidente técnico en una mentira hacia el cliente.
+	let rows: Awaited<ReturnType<typeof loadCategorias>> = [];
+	let dbFailed = false;
+
+	try {
+		rows = await loadCategorias();
+	} catch (error) {
+		dbFailed = true;
+		console.error("[categorias] No se pudieron cargar las colecciones:", error);
+	}
 
 	return (
 		<>
@@ -75,6 +97,7 @@ export default async function CategoriasPage() {
 											alt={`Colección de ${cat.name} - Finas Joyería`}
 											containerClassName="absolute inset-0"
 											imgClassName="object-cover transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110"
+											sizes="(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 92vw"
 										/>
 									) : (
 										<div className="absolute inset-0 flex items-center justify-center font-heading text-3xl font-light text-primary">
@@ -106,6 +129,16 @@ export default async function CategoriasPage() {
 									</div>
 								</Link>
 							))}
+						</div>
+					) : dbFailed ? (
+						<div className="rounded-xl border border-dashed bg-white/60 px-6 py-20 text-center">
+							<p className="font-heading text-2xl font-light text-heading">
+								No pudimos cargar las colecciones
+							</p>
+							<p className="mx-auto mt-2 max-w-md font-body text-sm text-muted-foreground">
+								Es un problema puntual de conexión con nuestro servidor.
+								Recarga la página en unos segundos.
+							</p>
 						</div>
 					) : (
 						<div className="rounded-xl border border-dashed bg-white/60 px-6 py-20 text-center">
