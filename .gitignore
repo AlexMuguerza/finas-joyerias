@@ -13,6 +13,15 @@
 # testing
 /coverage
 
+# Playwright
+# Los .spec.ts son herramientas de trabajo locales: se usan contra el servidor
+# del :3000 y no se versionan.
+/tests
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
+
 # next.js
 /.next/
 /out/
