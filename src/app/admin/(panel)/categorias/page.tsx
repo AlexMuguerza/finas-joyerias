@@ -15,7 +15,6 @@ import {
 import { CategoryDialog } from "@/components/admin/category-dialog";
 import { ImageThumbnail } from "@/components/admin/image-thumbnail";
 import { DeleteDialog } from "@/components/admin/delete-dialog";
-import { deleteCategory } from "@/app/admin/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -129,12 +128,12 @@ export default async function AdminCategoriesPage() {
 													size: "sm",
 												}}
 												/>
-												<DeleteDialog
-													id={row.id}
-													title="¿Eliminar categoría?"
-													description={`Se eliminará "${row.name}" junto con sus productos. Esta acción no se puede deshacer.`}
-													action={deleteCategory}
-												/>
+											<DeleteDialog
+												id={row.id}
+												target="category"
+												title="¿Eliminar categoría?"
+												description={`Se eliminará "${row.name}" junto con sus productos. Esta acción no se puede deshacer.`}
+											/>
 											</div>
 										</TableCell>
 									</TableRow>

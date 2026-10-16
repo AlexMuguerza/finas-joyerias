@@ -16,7 +16,6 @@ import { ProductDialog } from "@/components/admin/product-dialog";
 import { ImageThumbnail } from "@/components/admin/image-thumbnail";
 import { DeleteDialog } from "@/components/admin/delete-dialog";
 import { AdminPagination } from "@/components/admin/pagination";
-import { deleteProduct } from "@/app/admin/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -160,12 +159,12 @@ export default async function AdminProductsPage({
 														size: "sm",
 													}}
 												/>
-												<DeleteDialog
-													id={row.id}
-													title="¿Eliminar producto?"
-													description={`Se eliminará "${row.name}". Esta acción no se puede deshacer.`}
-													action={deleteProduct}
-												/>
+											<DeleteDialog
+												id={row.id}
+												target="product"
+												title="¿Eliminar producto?"
+												description={`Se eliminará "${row.name}". Esta acción no se puede deshacer.`}
+											/>
 											</div>
 										</TableCell>
 									</TableRow>

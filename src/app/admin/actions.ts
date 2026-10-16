@@ -244,12 +244,20 @@ export async function updateProduct(
 	redirect("/admin/productos");
 }
 
-export async function deleteProduct(formData: FormData): Promise<void> {
+export async function deleteProduct(formData: FormData): Promise<AdminActionState> {
 	const id = String(formData.get("id") ?? "").trim();
-	if (!id) return;
+	if (!id) return { error: "Producto inválido" };
 
-	await deleteProductRow(id);
+	const state = toState(
+		await deleteProductRow(id),
+		"Ya existe un producto con ese nombre o slug",
+		"No se pudo eliminar el producto",
+		"El producto ya no existe. Recarga la página."
+	);
+	if (state) return state;
+
 	revalidatePath("/admin/productos");
+	return null;
 }
 
 // ============================================
@@ -330,11 +338,22 @@ export async function updateCategory(
 	redirect("/admin/categorias");
 }
 
-export async function deleteCategory(formData: FormData): Promise<void> {
+export async function deleteCategory(formData: FormData): Promise<AdminActionState> {
 	const id = String(formData.get("id") ?? "").trim();
-	if (!id) return;
+	if (!id) return { error: "Categoría inválida" };
 
-	await deleteCategoryRow(id);
+	// El resultado del borrado se traduce a un estado en vez de ignorarse: sin
+	// sesión admin el DAL devuelve `unauthorized` y el diálogo cerraba como si
+	// la categoría se hubiera eliminado.
+	const state = toState(
+		await deleteCategoryRow(id),
+		"Ya existe una categoría con ese nombre o slug",
+		"No se pudo eliminar la categoría",
+		"La categoría ya no existe. Recarga la página."
+	);
+	if (state) return state;
+
 	revalidatePath("/admin/categorias");
 	revalidatePath("/admin/productos");
+	return null;
 }
