@@ -37,7 +37,7 @@ export function CartButton({
 		>
 			<ShoppingBag size={18} strokeWidth={1.5} />
 			{mounted && count > 0 && (
-				<span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-medium text-white">
+				<span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary-strong px-1 text-eyebrow font-medium text-white">
 					{count > 99 ? "99+" : count}
 				</span>
 			)}

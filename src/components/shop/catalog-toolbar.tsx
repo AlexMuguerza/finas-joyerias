@@ -105,9 +105,9 @@ export function CatalogToolbar({
 						}
 						aria-pressed={isFeatured}
 						className={cn(
-							"inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 font-body text-[11px] font-medium tracking-[0.1em] uppercase transition-colors",
+							"inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 font-body text-label font-medium tracking-label uppercase transition-colors",
 							isFeatured
-								? "border-primary bg-primary/10 text-primary"
+								? "border-primary bg-primary/10 text-primary-strong"
 								: "border-border bg-background text-muted-foreground hover:text-foreground"
 						)}
 					>
@@ -146,9 +146,9 @@ export function CatalogToolbar({
 						type="button"
 						onClick={() => apply({ categoria: undefined })}
 						className={cn(
-							"cursor-pointer rounded-full border px-4 py-1.5 font-body text-[11px] font-medium tracking-[0.1em] uppercase transition-colors",
+							"cursor-pointer rounded-full border px-4 py-1.5 font-body text-label font-medium tracking-label uppercase transition-colors",
 							!filters.categoria
-								? "border-primary bg-primary text-primary-foreground"
+								? "border-primary-strong bg-primary-strong text-primary-foreground"
 								: "border-border bg-background text-muted-foreground hover:text-foreground"
 						)}
 					>
@@ -166,9 +166,9 @@ export function CatalogToolbar({
 									})
 								}
 								className={cn(
-									"cursor-pointer rounded-full border px-4 py-1.5 font-body text-[11px] font-medium tracking-[0.1em] uppercase transition-colors",
+									"cursor-pointer rounded-full border px-4 py-1.5 font-body text-label font-medium tracking-label uppercase transition-colors",
 									active
-										? "border-primary bg-primary text-primary-foreground"
+										? "border-primary-strong bg-primary-strong text-primary-foreground"
 										: "border-border bg-background text-muted-foreground hover:text-foreground"
 								)}
 							>
@@ -190,7 +190,7 @@ export function CatalogToolbar({
 					<button
 						type="button"
 						onClick={() => apply({ categoria: undefined, q: undefined, featured: undefined, orden: undefined })}
-						className="cursor-pointer font-body text-xs tracking-[0.1em] text-primary uppercase underline-offset-4 hover:underline"
+						className="cursor-pointer font-body text-xs tracking-label text-primary-strong uppercase underline-offset-4 hover:underline"
 					>
 						Limpiar filtros
 					</button>

@@ -29,11 +29,11 @@ export const FeaturedProducts = ({ products }: { products: ShopProduct[] }) => {
 					transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
 					className="text-center mb-16"
 				>
-					<span className="font-body text-[10px] font-medium tracking-[0.3em] uppercase text-primary block mb-4">
+					<span className="font-body text-eyebrow font-medium tracking-eyebrow uppercase text-primary-strong block mb-4">
 						Piezas Seleccionadas
 					</span>
 					<h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-heading mb-6">
-						Nuestras <span className="italic text-primary">joyas</span> destacadas
+						Nuestras <span className="italic text-primary-strong">joyas</span> destacadas
 					</h2>
 					<div className="w-16 h-px bg-gold mx-auto" />
 				</motion.div>
@@ -68,38 +68,35 @@ export const FeaturedProducts = ({ products }: { products: ShopProduct[] }) => {
 										</div>
 									)}
 
-									{/* Badge */}
-									{product.isNew && (
-										<div className="absolute top-4 left-4 px-3 py-1 bg-primary text-white font-body text-[9px] font-medium tracking-[0.15em] uppercase">
-											Nuevo
-										</div>
-									)}									{/* Hover Actions: ojo → detalle */}
-									<div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/0 opacity-0 group-hover:bg-black/15 group-hover:opacity-100 transition-all duration-500">
-										<Link
-											href={`/productos/${product.slug}`}
-											className="w-12 h-12 bg-white/95 flex items-center justify-center text-foreground hover:bg-white transition-colors duration-300 translate-y-4 group-hover:translate-y-0"
-											aria-label={`Ver ${product.name} en detalle`}
-										>
-											<Eye size={18} strokeWidth={1.5} />
-										</Link>
+{/* Badge */}
+								{product.isNew && (
+									<div className="absolute top-4 left-4 bg-primary-strong px-3 py-1.5 font-body text-eyebrow font-medium tracking-label text-white uppercase">
+										Nuevo
 									</div>
+								)}
 
-									{/* Quick View Bar */}
-									<div className="absolute bottom-0 left-0 right-0 bg-foreground text-white py-3 px-4 translate-y-full group-hover:translate-y-0 transition-transform duration-400">
-										<span className="font-body text-[10px] font-medium tracking-[0.15em] uppercase">
-											Vista rápida
-										</span>
-									</div>
+								{/* Enlace al detalle. El botón con el ojo solo se ve con
+								    hover en escritorio: en táctil no hay hover y el
+								    enlace quedaba enfocable pero invisible. */}
+								<div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-100 transition-opacity duration-500 lg:bg-black/0 lg:opacity-0 lg:group-hover:bg-black/15 lg:group-hover:opacity-100">
+									<Link
+										href={`/productos/${product.slug}`}
+										className="flex h-12 w-12 items-center justify-center bg-white/95 text-foreground transition-all duration-300 hover:bg-white lg:translate-y-4 lg:group-hover:translate-y-0"
+										aria-label={`Ver ${product.name} en detalle`}
+									>
+										<Eye size={18} strokeWidth={1.5} aria-hidden="true" />
+									</Link>
 								</div>
+							</div>
 
 								{/* Product Info */}
 								<div className="text-center">
 									{product.categoryName && (
-										<span className="font-body text-[10px] font-medium tracking-[0.2em] uppercase text-primary block mb-2">
+										<span className="font-body text-eyebrow font-medium tracking-label uppercase text-primary-strong block mb-2">
 											{product.categoryName}
 										</span>
 									)}
-									<h3 className="font-heading text-xl font-light text-heading mb-2 group-hover:text-primary transition-colors duration-300">
+									<h3 className="font-heading text-xl font-light text-heading mb-2 group-hover:text-primary-strong transition-colors duration-300">
 										{product.name}
 									</h3>
 									<p className="font-body text-base font-medium text-foreground">

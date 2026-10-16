@@ -1,8 +1,42 @@
 import type { Metadata } from "next";
+import { Cormorant_Garamond, Montserrat } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { SITE_ORIGIN } from "@/lib/site";
 import { Providers } from "@/components/providers";
+
+/**
+ * Las dos únicas familias del proyecto.
+ *
+ * Antes se enlazaban a mano en el `<head>`: 3 familias (Cormorant Garamond,
+ * Great Vibes y Montserrat) y 13 ficheros, de los que solo se usaban cuatro
+ * pesos. Great Vibes no la usaba ningún componente — era una descarga entera
+ * por nada — y el `<link>` a `fonts.googleapis.com` era un request a un tercero
+ * en el camino crítico, que es justo lo que `next/font` evita sirviendo los
+ * ficheros desde el propio dominio (y de paso quita el aviso de
+ * `@next/next/no-page-custom-font`).
+ *
+ * Los pesos son los que aparecen en el markup: `font-light`, `font-normal`,
+ * `font-medium` y `font-semibold`. Cormorant además en itálica, que usan los
+ * títulos de sección.
+ *
+ * `variable` publica el nombre en `:root`; `globals.css` lo consume en
+ * `--font-heading` y `--font-body` del `@theme`.
+ */
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Finas | Joyería Exclusiva y Elegante",
@@ -75,19 +109,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" data-scroll-behavior="smooth" className={cn("antialiased")}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=Great+Vibes&family=Montserrat:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="es"
+      data-scroll-behavior="smooth"
+      className={cn("antialiased", cormorant.variable, montserrat.variable)}
+    >
       <body className="font-body antialiased">
         <Providers>{children}</Providers>
       </body>

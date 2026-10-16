@@ -86,12 +86,11 @@ export const Navbar = () => {
   const scrollToSection = (href: string) => {
     const sectionId = href.replace("#", "");
     const section = document.getElementById(sectionId);
-    if (section) {
-      window.scrollTo({
-        top: section.getBoundingClientRect().top + window.scrollY,
-        behavior: "smooth",
-      });
-    }
+    // `scrollIntoView` y no `window.scrollTo` con el `top` calculado a mano:
+    // el primero respeta el `scroll-padding-top` que declara `globals.css`
+    // (html), que es lo que impide que el título de la sección quede debajo
+    // del header `fixed`. El segundo lo ignora y tapaba el encabezado.
+    section?.scrollIntoView({ behavior: "smooth", block: "start" });
     // El cierre del diálogo lo hace `MobileNavAnchorLink` (es un
     // `Dialog.Close`); aquí solo falta el scroll.
   };
@@ -137,9 +136,9 @@ export const Navbar = () => {
               <button
                 key={link.href}
                 onClick={() => scrollToSection(link.href)}
-                className={`relative font-body text-[11px] font-medium tracking-[0.15em] uppercase transition-colors duration-300 cursor-pointer ${
+                className={`relative font-body text-label font-medium tracking-label uppercase transition-colors duration-300 cursor-pointer ${
                   activeSection === link.href
-                    ? "text-primary"
+                    ? "text-primary-strong"
                     : "text-text-body hover:text-foreground"
                 }`}
                 aria-current={activeSection === link.href ? "page" : undefined}
@@ -168,7 +167,7 @@ export const Navbar = () => {
             <CartButton className="text-foreground" />
             <button
               type="button"
-              className="flex h-11 w-11 cursor-pointer items-center justify-center text-foreground transition-colors duration-300 hover:text-primary"
+              className="flex h-11 w-11 cursor-pointer items-center justify-center text-foreground transition-colors duration-300 hover:text-primary-strong"
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label={isMobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
               aria-expanded={isMobileMenuOpen}

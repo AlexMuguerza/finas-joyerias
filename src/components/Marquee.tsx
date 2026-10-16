@@ -31,7 +31,7 @@ export const Marquee = () => {
         >
           {[...items, ...items, ...items].map((item, index) => (
             <div key={index} className="flex items-center gap-12">
-              <span className="font-body text-[11px] font-medium tracking-[0.2em] uppercase text-white/70">
+              <span className="font-body text-label font-medium tracking-label uppercase text-white/70">
                 {item}
               </span>
               <svg

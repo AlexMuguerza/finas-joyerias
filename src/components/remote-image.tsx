@@ -92,7 +92,7 @@ export function RemoteImage({
 						className="flex h-full min-h-24 w-full flex-col items-center justify-center gap-1.5 bg-soft-pink text-muted-foreground"
 					>
 						<ImageOffIcon className="h-5 w-5 shrink-0" strokeWidth={1.5} />
-						<span className="px-2 text-center font-body text-[9px] font-medium leading-tight tracking-[0.15em] uppercase">
+						<span className="px-2 text-center font-body text-eyebrow font-medium leading-tight tracking-label uppercase">
 							Imagen no disponible
 						</span>
 					</div>

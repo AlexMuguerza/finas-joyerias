@@ -24,11 +24,11 @@ export const BrandStory = () => {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-20"
         >
-          <span className="font-body text-[10px] font-medium tracking-[0.3em] uppercase text-primary block mb-4">
+          <span className="font-body text-eyebrow font-medium tracking-eyebrow uppercase text-primary-strong block mb-4">
             Nuestra Esencia
           </span>
           <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-heading mb-6">
-            Historia de <span className="italic text-primary">pasi&oacute;n</span>
+            Historia de <span className="italic text-primary-strong">pasi&oacute;n</span>
           </h2>
           <div className="w-16 h-px bg-gold mx-auto" />
         </motion.div>
@@ -61,10 +61,10 @@ export const BrandStory = () => {
               className="absolute -bottom-8 -right-4 lg:-right-8 bg-white p-6 shadow-medium"
             >
               <div className="text-center">
-                <span className="font-heading text-4xl font-light text-primary block">
+                <span className="font-heading text-4xl font-light text-primary-strong block">
                   15+
                 </span>
-                <span className="font-body text-[10px] font-medium tracking-[0.15em] uppercase text-text-body">
+                <span className="font-body text-eyebrow font-medium tracking-label uppercase text-text-body">
                   Años de Experiencia
                 </span>
               </div>
@@ -80,7 +80,7 @@ export const BrandStory = () => {
           >
             <h3 className="font-heading text-3xl md:text-4xl font-light text-heading mb-6 leading-tight">
               Cada joya es una{' '}
-              <span className="italic text-primary">obra de arte</span>
+              <span className="italic text-primary-strong">obra de arte</span>
             </h3>
             <p className="font-body text-sm text-text-body leading-relaxed mb-6">
               En Finas, cada pieza nace de la pasi&oacute;n por la excelencia.
@@ -101,10 +101,10 @@ export const BrandStory = () => {
                 { number: "1000+", label: "Clientes Felices" },
               ].map((stat, i) => (
                 <div key={i} className="text-center lg:text-left">
-                  <span className="font-heading text-2xl font-light text-primary block">
+                  <span className="font-heading text-2xl font-light text-primary-strong block">
                     {stat.number}
                   </span>
-                  <span className="font-body text-[10px] font-medium tracking-[0.1em] uppercase text-text-body">
+                  <span className="font-body text-eyebrow font-medium tracking-label uppercase text-text-body">
                     {stat.label}
                   </span>
                 </div>
@@ -145,7 +145,7 @@ export const BrandStory = () => {
               height="24"
               viewBox="0 0 32 24"
               fill="none"
-              className="mx-auto mb-6 text-primary/40"
+              className="mx-auto mb-6 text-primary-strong/40"
             >
               <path
                 d="M0 24V14.4C0 10.4 0.8 7.2 2.4 4.8C4 2.4 6.4 0.8 9.6 0L12.8 4C10.4 4.8 8.8 6 8 7.6C7.2 9.2 6.8 10.8 6.8 12.4H12V24H0ZM20 24V14.4C20 10.4 20.8 7.2 22.4 4.8C24 2.4 26.4 0.8 29.6 0L32 4C29.6 4.8 28 6 27.2 7.6C26.4 9.2 26 10.8 26 12.4H32V24H20Z"
@@ -155,7 +155,7 @@ export const BrandStory = () => {
             <p className="font-heading text-2xl md:text-3xl font-light text-heading italic leading-relaxed mb-6">
               &ldquo;La elegancia es la &uacute;nica belleza que nunca se desvanece&rdquo;
             </p>
-            <span className="font-body text-[11px] font-medium tracking-[0.2em] uppercase text-primary">
+            <span className="font-body text-label font-medium tracking-label uppercase text-primary-strong">
               &mdash; Filosofía Finas
             </span>
           </div>

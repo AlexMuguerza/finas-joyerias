@@ -49,7 +49,7 @@ export function AdminShell({
 						className={cn(
 							"flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
 							active
-								? "bg-primary/10 font-medium text-primary"
+								? "bg-primary/10 font-medium text-primary-strong"
 								: "text-muted-foreground hover:bg-muted hover:text-foreground"
 						)}
 					>
@@ -65,7 +65,7 @@ export function AdminShell({
 		<div className="flex h-full flex-col gap-6 p-5">
 			<Link href="/admin" className="flex items-center gap-2 px-3">
 				<span className="font-heading text-lg font-semibold tracking-tight">
-					Finas <span className="text-primary">Admin</span>
+					Finas <span className="text-primary-strong">Admin</span>
 				</span>
 			</Link>
 			{navLinks}
@@ -113,7 +113,7 @@ export function AdminShell({
 									className={cn(
 										"flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-colors",
 										active
-											? "bg-primary/10 font-medium text-primary"
+											? "bg-primary/10 font-medium text-primary-strong"
 											: "text-muted-foreground hover:bg-muted"
 									)}
 								>

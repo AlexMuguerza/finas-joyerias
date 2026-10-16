@@ -44,11 +44,11 @@ export default async function CategoriasPage() {
 		<>
 			<section className="bg-cream pt-36 pb-10 md:pt-44">
 				<div className="mx-auto max-w-7xl px-6 text-center lg:px-8">
-					<span className="mb-4 block font-body text-[10px] font-medium tracking-[0.3em] text-primary uppercase">
+					<span className="mb-4 block font-body text-eyebrow font-medium tracking-eyebrow text-primary-strong uppercase">
 						Nuestras Colecciones
 					</span>
 					<h1 className="font-heading text-4xl font-light text-heading md:text-5xl">
-						Encuentra tu <span className="italic text-primary">estilo</span>
+						Encuentra tu <span className="italic text-primary-strong">estilo</span>
 					</h1>
 					<p className="mx-auto mt-4 max-w-xl font-body text-sm text-text-body">
 						Cada colección está curada con piezas únicas. Pasa el cursor
@@ -76,7 +76,7 @@ export default async function CategoriasPage() {
 											sizes="(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 92vw"
 										/>
 									) : (
-										<div className="absolute inset-0 flex items-center justify-center font-heading text-3xl font-light text-primary">
+										<div className="absolute inset-0 flex items-center justify-center font-heading text-3xl font-light text-primary-strong">
 											{cat.name.charAt(0)}
 										</div>
 									)}
@@ -87,7 +87,7 @@ export default async function CategoriasPage() {
 									{/* Contenido */}
 									<div className="absolute inset-x-0 bottom-0 flex flex-col justify-end p-8">
 										<div className="transform transition-transform duration-500 group-hover:translate-y-[-8px]">
-											<span className="mb-2 block font-body text-[10px] font-medium tracking-[0.2em] text-white/70 uppercase">
+											<span className="mb-2 block font-body text-eyebrow font-medium tracking-label text-white/70 uppercase">
 												{cat.productCount === 1
 													? "1 pieza"
 													: `${cat.productCount} piezas`}
@@ -98,7 +98,7 @@ export default async function CategoriasPage() {
 											<p className="max-h-0 overflow-hidden font-body text-sm leading-relaxed text-white/80 opacity-0 transition-all duration-500 group-hover:max-h-24 group-hover:opacity-100">
 												{cat.description || "Explora esta colección."}
 											</p>
-											<span className="mt-4 inline-block font-body text-[10px] font-medium tracking-[0.2em] text-white/90 uppercase transition-colors duration-300 group-hover:text-primary-light">
+											<span className="mt-4 inline-block font-body text-eyebrow font-medium tracking-label text-white/90 uppercase transition-colors duration-300 group-hover:text-primary-light">
 												Ver colección →
 											</span>
 										</div>

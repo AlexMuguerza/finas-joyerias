@@ -69,7 +69,7 @@ export const CTA = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="font-body text-[10px] font-medium tracking-[0.3em] uppercase text-white/70 block mb-6"
+            className="font-body text-eyebrow font-medium tracking-eyebrow uppercase text-white/70 block mb-6"
           >
             Hazlo Especial
           </motion.span>
@@ -107,7 +107,7 @@ export const CTA = () => {
             </Link>
             <Link
               href="/shop"
-              className="px-10 py-4 border border-white/30 text-white font-body text-[11px] font-medium tracking-[0.2em] uppercase hover:bg-white/10 transition-all duration-500 cursor-pointer"
+              className="px-10 py-4 border border-white/30 text-white font-body text-label font-medium tracking-label uppercase hover:bg-white/10 transition-all duration-500 cursor-pointer"
             >
               Ver Catálogo Completo
             </Link>
@@ -141,7 +141,7 @@ export const CTA = () => {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span className="font-body text-[11px] text-white/70">
+                <span className="font-body text-label text-white/70">
                   {item}
                 </span>
               </div>

@@ -9,6 +9,13 @@
   --primary: #D4849C;
   --primary-hover: #C97590;
   --primary-light: #E8A8BA;
+  /* Rosa profundo SOLO para texto e íconos pequeños.
+     `#D4849C` sobre `#FDF8F9` da 2.6:1 y el mínimo AA para texto normal es
+     4.5:1, así que con el rosa del logo no se puede escribir encima. Este tono
+     da 5.4:1 sobre crema y 5.7:1 con texto blanco encima, y es lo que usan los
+     eyebrows, los enlaces activos, los chips y los badges. `#D4849C` sigue
+     mandando en rellenos grandes y decorativos, donde no hay texto. */
+  --primary-strong: #A8455F;
   --primary-foreground: #FFFFFF;
   --secondary: #F0D4DC;
   --secondary-foreground: #2A2426;
@@ -50,11 +57,16 @@
   --space-4xl: 96px;
   --space-5xl: 128px;
 
-  /* Shadows */
-  --shadow-soft: 0 2px 20px rgba(212, 132, 156, 0.08);
-  --shadow-medium: 0 4px 30px rgba(212, 132, 156, 0.12);
-  --shadow-heavy: 0 8px 40px rgba(212, 132, 156, 0.16);
-  --shadow-gold: 0 4px 30px rgba(201, 169, 110, 0.15);
+  /* Shadows.
+     Se nombran `--elevation-*` y no `--shadow-*` a propósito: Tailwind solo
+     genera la utilidad `shadow-soft` si el token vive en `@theme`, y si se
+     llama igual que la utilidad se poda por no estar en el theme. Estaban
+     declarados solo en `:root`, así que `shadow-soft` no existía en el CSS
+     compilado y el header pegajoso iba sin sombra. */
+  --elevation-soft: 0 2px 20px rgba(212, 132, 156, 0.08);
+  --elevation-medium: 0 4px 30px rgba(212, 132, 156, 0.12);
+  --elevation-heavy: 0 8px 40px rgba(212, 132, 156, 0.16);
+  --elevation-gold: 0 4px 30px rgba(201, 169, 110, 0.15);
 
   /* Transitions */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -84,6 +96,7 @@
   --foreground: #F0E8EB;
   --primary: #D4849C;
   --primary-hover: #E8A8BA;
+  --primary-strong: #E8A8BA;
   --primary-foreground: #FFFFFF;
   --secondary: #2D2025;
   --secondary-foreground: #F0E8EB;
@@ -120,13 +133,17 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-light: var(--primary-light);
+  --color-primary-strong: var(--primary-strong);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-soft-pink: #F8E8EC;
   --color-cream: #FDF8F9;
   --color-text-body: #5A5256;
-  --color-text-heading: #1A1A1A;
+  /* `text-heading` (no `text-text-heading`): era el nombre que usaban los ~20
+     sitios del markup, pero el token se llamaba `--color-text-heading`, así que
+     la clase no existía y todos los títulos caían a `text-foreground`. */
+  --color-heading: var(--heading);
   --color-border: var(--border);
   --color-accent-blush: #E8C4B8;
   --color-accent: var(--accent);
@@ -156,9 +173,36 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --font-heading: 'Cormorant Garamond', serif;
-  --font-body: 'Montserrat', sans-serif;
-  --font-sans: 'Montserrat', sans-serif;
+
+  /* Sombras: mapeadas desde `--elevation-*` para que `shadow-soft`,
+     `shadow-medium`, `shadow-heavy` y `shadow-gold` existan de verdad. */
+  --shadow-soft: var(--elevation-soft);
+  --shadow-medium: var(--elevation-medium);
+  --shadow-heavy: var(--elevation-heavy);
+  --shadow-gold: var(--elevation-gold);
+
+  /* Tipografías. Antes eran 3 ficheros de Google Fonts enlazados a mano y 13
+     variantes de peso; solo se usaban cuatro (300/400/500/600) y la tercera
+     familia, Great Vibes, no la usaba ningún componente. Ahora las serve
+     `next/font` desde el propio dominio, que además quita el request a un
+     tercero del camino crítico. */
+  --font-heading: var(--font-cormorant), Georgia, serif;
+  --font-body: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+
+  /* Escala tipográfica. Antes había 50 `text-[9px]` / `text-[10px]` /
+     `text-[11px]` repartidos por el markup, con tres tamaños distintos para
+     "letra pequeña en mayúsculas" y ninguno legible: 9px y 10px están por
+     debajo del mínimo que se sostiene en una pantalla. Ahora hay dos pasos
+     con nombre, y el patrón completo es
+     `text-eyebrow tracking-eyebrow font-medium uppercase`. */
+  --text-eyebrow: 0.6875rem; /* 11px */
+  --text-eyebrow--line-height: 1.1;
+  --text-label: 0.75rem; /* 12px */
+  --text-label--line-height: 1.4;
+  --tracking-eyebrow: 0.3em;
+  --tracking-label: 0.15em;
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -171,17 +215,21 @@
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
+  /* El header es `fixed` de ~80px: sin esto, un salto a `#contacto` deja el
+     título de la sección debajo de la barra. Compensa los `scrollIntoView` y
+     los anclas del HTML, no los `window.scrollTo` con `top` explícito. */
+  scroll-padding-top: 5rem;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body);
   overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
 }
 
 ::selection {
@@ -218,7 +266,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   padding: 14px 36px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.2em;
@@ -263,7 +311,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   padding: 14px 36px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.2em;
@@ -304,18 +352,6 @@ h1, h2, h3, h4, h5, h6 {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--gold), transparent);
   margin: 24px auto;
-}
-
-/* Reveal animation base */
-.reveal {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: all 0.8s var(--ease-out-expo);
-}
-
-.reveal.active {
-  opacity: 1;
-  transform: translateY(0);
 }
 
 /* Image hover effect */
@@ -400,25 +436,6 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
 }
 
-/* Stagger children animation */
-.stagger-children > * {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.stagger-children.active > *:nth-child(1) { transition-delay: 0.1s; }
-.stagger-children.active > *:nth-child(2) { transition-delay: 0.2s; }
-.stagger-children.active > *:nth-child(3) { transition-delay: 0.3s; }
-.stagger-children.active > *:nth-child(4) { transition-delay: 0.4s; }
-.stagger-children.active > *:nth-child(5) { transition-delay: 0.5s; }
-.stagger-children.active > *:nth-child(6) { transition-delay: 0.6s; }
-
-.stagger-children.active > * {
-  opacity: 1;
-  transform: translateY(0);
-  transition: all 0.6s var(--ease-out-expo);
-}
-
 /* Custom cursor for luxury feel */
 .cursor-luxury {
   cursor: pointer;
@@ -454,7 +471,7 @@ h1, h2, h3, h4, h5, h6 {
 .input-luxury textarea {
   width: 100%;
   padding: 16px 0 8px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body);
   font-size: 14px;
   color: var(--foreground);
   background: transparent;
@@ -473,7 +490,7 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   left: 0;
   top: 16px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;

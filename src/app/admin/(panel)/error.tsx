@@ -39,7 +39,7 @@ export default function AdminError({
 			</p>
 
 			{error.digest && (
-				<p className="mb-6 font-mono text-[11px] text-muted-foreground">
+				<p className="mb-6 font-mono text-label text-muted-foreground">
 					Referencia: {error.digest}
 				</p>
 			)}
@@ -48,14 +48,14 @@ export default function AdminError({
 				<button
 					type="button"
 					onClick={reset}
-					className="inline-flex cursor-pointer items-center justify-center gap-2 bg-foreground px-6 py-3 font-body text-[11px] font-medium tracking-[0.15em] text-white uppercase transition-colors hover:bg-foreground/85"
+					className="inline-flex cursor-pointer items-center justify-center gap-2 bg-foreground px-6 py-3 font-body text-label font-medium tracking-label text-white uppercase transition-colors hover:bg-foreground/85"
 				>
 					<RotateCcwIcon size={14} strokeWidth={1.5} />
 					Reintentar
 				</button>
 				<Link
 					href="/admin"
-					className="inline-block border border-foreground/40 px-6 py-3 font-body text-[11px] font-medium tracking-[0.15em] text-foreground uppercase transition-colors hover:bg-foreground/5"
+					className="inline-block border border-foreground/40 px-6 py-3 font-body text-label font-medium tracking-label text-foreground uppercase transition-colors hover:bg-foreground/5"
 				>
 					Volver al panel
 				</Link>

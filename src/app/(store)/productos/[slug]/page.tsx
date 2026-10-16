@@ -131,9 +131,9 @@ export default async function ProductPage({
 				className="bg-cream pt-32 md:pt-36"
 			>
 				<div className="mx-auto max-w-7xl px-6 lg:px-8">
-					<ol className="flex flex-wrap items-center gap-2 font-body text-[11px] tracking-widest text-muted-foreground uppercase">
+					<ol className="flex flex-wrap items-center gap-2 font-body text-label tracking-widest text-muted-foreground uppercase">
 						<li>
-							<Link href="/" className="transition-colors hover:text-primary">
+							<Link href="/" className="transition-colors hover:text-primary-strong">
 								Inicio
 							</Link>
 						</li>
@@ -141,7 +141,7 @@ export default async function ProductPage({
 						<li>
 							<Link
 								href="/categorias"
-								className="transition-colors hover:text-primary"
+								className="transition-colors hover:text-primary-strong"
 							>
 								Categorías
 							</Link>
@@ -152,7 +152,7 @@ export default async function ProductPage({
 								<li>
 									<Link
 										href={`/shop?categoria=${encodeURIComponent(product.categorySlug ?? "")}`}
-										className="transition-colors hover:text-primary"
+										className="transition-colors hover:text-primary-strong"
 									>
 										{product.categoryName}
 									</Link>
@@ -186,7 +186,7 @@ export default async function ProductPage({
 							</div>
 						)}
 						{isNew && (
-							<span className="absolute top-5 left-5 bg-primary px-3 py-1 font-body text-[9px] font-medium tracking-[0.15em] text-white uppercase">
+							<span className="absolute top-5 left-5 bg-primary-strong px-3 py-1.5 font-body text-eyebrow font-medium tracking-label text-white uppercase">
 								Nuevo
 							</span>
 						)}
@@ -195,7 +195,7 @@ export default async function ProductPage({
 					{/* Información */}
 					<div className="flex flex-col justify-center">
 						{product.categoryName && (
-							<span className="mb-3 block font-body text-[11px] font-medium tracking-[0.2em] text-primary uppercase">
+							<span className="mb-3 block font-body text-label font-medium tracking-label text-primary-strong uppercase">
 								{product.categoryName}
 							</span>
 						)}
@@ -203,7 +203,7 @@ export default async function ProductPage({
 							{product.name}
 						</h1>
 						{product.sku && (
-							<p className="mb-3 font-body text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
+							<p className="mb-3 font-body text-label tracking-label text-muted-foreground uppercase">
 								SKU: {product.sku}
 							</p>
 						)}
@@ -232,7 +232,7 @@ export default async function ProductPage({
 							/>
 							<Link
 								href="/carrito"
-								className="px-10 py-4 text-center font-body text-[11px] font-medium tracking-[0.2em] text-foreground uppercase transition-colors duration-300 border border-foreground/40 hover:bg-foreground/5"
+								className="px-10 py-4 text-center font-body text-label font-medium tracking-label text-foreground uppercase transition-colors duration-300 border border-foreground/40 hover:bg-foreground/5"
 							>
 								Ver carrito
 							</Link>
@@ -246,11 +246,11 @@ export default async function ProductPage({
 				<section className="overflow-hidden bg-cream pb-24">
 					<div className="mx-auto max-w-7xl px-6 lg:px-8">
 						<div className="mb-12 text-center">
-							<span className="mb-3 block font-body text-[10px] font-medium tracking-[0.3em] text-primary uppercase">
+							<span className="mb-3 block font-body text-eyebrow font-medium tracking-eyebrow text-primary-strong uppercase">
 								Completa tu look
 							</span>
 							<h2 className="font-heading text-3xl font-light text-heading md:text-4xl">
-								También te puede <span className="italic text-primary">gustar</span>
+								También te puede <span className="italic text-primary-strong">gustar</span>
 							</h2>
 						</div>
 

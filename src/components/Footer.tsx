@@ -147,7 +147,7 @@ export const Footer = () => {
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between gap-4">
-            <p className="font-body text-[11px] text-white/40">
+            <p className="font-body text-label text-white/40">
               © {new Date().getFullYear()} Finas Joyería. Todos los derechos
               reservados.
             </p>
@@ -155,7 +155,7 @@ export const Footer = () => {
               href={WHATSAPP_GENERIC_HREF}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-body text-[11px] text-white/40 hover:text-white/70 transition-colors duration-300"
+              className="font-body text-label text-white/40 hover:text-white/70 transition-colors duration-300"
             >
               Términos, envíos y devoluciones
             </a>
@@ -169,7 +169,7 @@ export const Footer = () => {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         onClick={scrollToTop}
-        className="fixed bottom-8 right-8 w-12 h-12 bg-primary text-white flex items-center justify-center shadow-medium hover:bg-primary-hover transition-all duration-300 z-40 cursor-pointer"
+        className="fixed bottom-8 right-8 w-12 h-12 bg-primary-strong text-white flex items-center justify-center shadow-medium hover:bg-primary-hover transition-all duration-300 z-40 cursor-pointer"
         aria-label="Volver arriba"
         whileHover={{ y: -4 }}
         whileTap={{ scale: 0.95 }}

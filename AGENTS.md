@@ -16,6 +16,14 @@ Léelo **antes** de tocar código.
 - El `webServer` de `playwright.config.ts` usa `reuseExistingServer`, así que
   las pruebas se conectan al 3000 sin lanzar nada.
 - Si necesitas reiniciarlo, **pídelo**, no lo hagas por tu cuenta.
+- **No corras `pnpm build` con el dev levantado.** Los dos escriben en
+  `.next/`. El build de producción se lleva por delante `server/`, `static/` y
+  los manifiestos, el dev se queda con su manifiesto de Server Actions en
+  memoria, y cada acción responde `Failed to find Server Action "…"` — parece
+  un bug del panel y no lo es. Se arregla reiniciando el dev.
+- Para comprobar una clase nueva, **compila el CSS y mira el resultado** en vez
+  de asumirlo: `pnpm build` genera `.next/static/chunks/*.css` y un `grep` del
+  `.text-heading` o `.shadow-soft` dice si la utilidad existe de verdad.
 
 ---
 
@@ -129,7 +137,17 @@ src/
    `MutationResult` (`{ ok: true }` / `{ ok: false, reason }`). El mapeo de
    `reason` a mensaje vive en `toState()`.
 
-6. **`import "server-only"`** en todo lo de `lib/server/`. Los marcadores
+6. **Las Server Actions se importan en el componente *cliente* que las usa,
+   nunca en la página.** Si una Server Component las importa y se las pasa como
+   prop a un Client Component, Turbopack no las mete en el grafo de cliente, no
+   les genera ID y el POST responde `Failed to find Server Action "<hash>"`: el
+   botón no hace nada y no sale ningún error. Se comprueba mirando
+   `.next/dev/server/**/server-reference-manifest.json` — la acción que falta ahí
+   es la que falla — y en `.next/dev/static/`, donde solo aparece lo que algún
+   componente cliente importa. `DeleteDialog` por eso recibe `target`, no la
+   acción.
+
+7. **`import "server-only"`** en todo lo de `lib/server/`. Los marcadores
    `server-only` / `client-only` están puestos a propósito: el build falla si se
    cruza la frontera.
 
@@ -205,8 +223,6 @@ HTML renderizado: casi todo el código es `server-only`.
 
 Al añadir una prueba:
 
-- **Espera a los datos, no al reloj.** La bandera del preloader se escribe al
-  terminar la animación; usa `expect.poll`.
 - **`await` las promesas dentro de `expect`.** `expect(promise)` compara el
   objeto `Promise`, no el valor.
 - `notFound()` dentro de una página con streaming devuelve **200**, no 404.
@@ -218,7 +234,31 @@ Al añadir una prueba:
 
 ---
 
-## 8. Cosas que no debes romper
+## 8. Tipografía y color
+
+- **Dos familias, ni una más.** Cormorant Garamond (`--font-heading`) y
+  Montserrat (`--font-body`), servidas por `next/font` desde el propio dominio.
+  No enlaces Google Fonts a mano ni añadas una tercera familia.
+- **Pesos:** solo `300` (`font-light`), `400`, `500` (`font-medium`) y `600`
+  (`font-semibold`), más la itálica de Cormorant. Declarar un peso que nadie
+  usa es un fichero extra en la descarga de todo el mundo.
+- **Nada de tamaños arbitrarios.** No escribas `text-[10px]`: la escala está en
+  `@theme` y son `text-eyebrow` (11px) y `text-label` (12px), con
+  `tracking-eyebrow` (0.3em) y `tracking-label` (0.15em). El patrón completo es
+  `text-eyebrow tracking-eyebrow font-medium uppercase`.
+- **`text-primary` es para rellenos, no para escribir encima.** `#D4849C` sobre
+  crema da 2.6:1 y el mínimo AA es 4.5:1. Para texto —eyebrows, enlaces,
+  itálicas, iconos— usa `text-primary-strong`. Para texto blanco encima de un
+  relleno rosado, `bg-primary-strong`.
+- **Los tokens que se usan tienen que existir en `@theme`.** Tailwind solo
+  genera la utilidad si el token está mapeado ahí: `--shadow-*` sin mapear
+  (pasó con `shadow-soft`) y `--color-heading` mal nombrado (pasó con
+  `text-heading`) producen clases que no existen y el estilo se pierde en
+  silencio. Compila y compruébalo.
+
+---
+
+## 9. Cosas que no debes romper
 
 | Regla | Por qué |
 |---|---|
@@ -227,10 +267,11 @@ Al añadir una prueba:
 | No tocar `products.sku` a `NOT NULL` en la BD sin permiso | El schema ya lo declara; la BD sigue nullable hasta que se aplique la migración |
 | `v7()` para los ids | Ordenables por tiempo |
 | Un único `Date.now()` por render | La marca "Nuevo" compara contra la ventana de 7 días; dos `now` desincronizan filtro y etiqueta |
+| Nada de contenido detrás de un `opacity: 0` que dependa de JS | Framer-motion escribe los estilos iniciales **en el HTML**: sin JS el texto no se ve y Google lo indexa como una página vacía. Hubo un `Preloader` que montaba la landing entera así |
 
 ---
 
-## 9. Commits
+## 10. Commits
 
 Conventional Commits en **español**: `fix:`, `feat:`, `chore:`.
 

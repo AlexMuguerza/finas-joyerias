@@ -70,7 +70,7 @@ export function MobileNavMenu({
 							aria-label="Cerrar menú"
 							// `-mr-2` compensa la mitad del padding extra para que el
 							// icono quede optically alineado con el resto del menú.
-							className="-mr-2 flex h-11 w-11 cursor-pointer items-center justify-center text-foreground transition-colors duration-300 hover:text-primary"
+							className="-mr-2 flex h-11 w-11 cursor-pointer items-center justify-center text-foreground transition-colors duration-300 hover:text-primary-strong"
 						>
 							<X size={26} />
 						</DialogPrimitive.Close>
@@ -138,7 +138,7 @@ export function MobileNavLink({
 			style={{ animationDelay: `${100 + index * 60}ms` }}
 			className={cn(
 				ITEM_BASE,
-				isActive ? "text-primary" : "text-foreground hover:text-primary"
+				isActive ? "text-primary-strong" : "text-foreground hover:text-primary-strong"
 			)}
 		>
 			{children}
@@ -172,7 +172,7 @@ export function MobileNavAnchorLink({
 			style={{ animationDelay: `${100 + index * 60}ms` }}
 			className={cn(
 				ITEM_BASE,
-				isActive ? "text-primary" : "text-foreground hover:text-primary"
+				isActive ? "text-primary-strong" : "text-foreground hover:text-primary-strong"
 			)}
 		>
 			{children}

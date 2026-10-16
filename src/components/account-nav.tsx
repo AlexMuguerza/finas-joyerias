@@ -65,14 +65,14 @@ export function AccountNav({
 					<Link
 						href="/auth/login"
 						onClick={onNavigate}
-						className="font-heading text-2xl text-foreground transition-colors duration-300 hover:text-primary"
+						className="font-heading text-2xl text-foreground transition-colors duration-300 hover:text-primary-strong"
 					>
 						Ingresar
 					</Link>
 					<Link
 						href="/auth/register"
 						onClick={onNavigate}
-						className="font-heading text-2xl text-foreground transition-colors duration-300 hover:text-primary"
+						className="font-heading text-2xl text-foreground transition-colors duration-300 hover:text-primary-strong"
 					>
 						Crear cuenta
 					</Link>
@@ -82,14 +82,14 @@ export function AccountNav({
 
 		return (
 			<div className="flex flex-col items-center gap-3">
-				<p className="text-xs tracking-[0.15em] text-muted-foreground uppercase">
+				<p className="text-xs tracking-label text-muted-foreground uppercase">
 					{user.email}
 				</p>
 				{isAdmin && (
 					<Link
 						href="/admin"
 						onClick={onNavigate}
-						className="flex items-center gap-2 font-heading text-2xl text-foreground transition-colors duration-300 hover:text-primary"
+						className="flex items-center gap-2 font-heading text-2xl text-foreground transition-colors duration-300 hover:text-primary-strong"
 					>
 						<LayoutDashboardIcon size={20} strokeWidth={1.5} />
 						Panel de administración
@@ -98,7 +98,7 @@ export function AccountNav({
 				<button
 					type="button"
 					onClick={handleSignOut}
-					className="flex cursor-pointer items-center gap-2 font-heading text-2xl text-foreground transition-colors duration-300 hover:text-primary"
+					className="flex cursor-pointer items-center gap-2 font-heading text-2xl text-foreground transition-colors duration-300 hover:text-primary-strong"
 				>
 					<LogOutIcon size={20} strokeWidth={1.5} />
 					Cerrar sesión
@@ -126,7 +126,7 @@ export function AccountNav({
 			<Link
 				href="/auth/login"
 				className={cn(
-					"font-body text-[11px] font-medium tracking-[0.15em] uppercase transition-colors duration-300",
+					"font-body text-label font-medium tracking-label uppercase transition-colors duration-300",
 					"text-text-body hover:text-foreground",
 					className
 				)}

@@ -44,7 +44,7 @@ function CartRow({ item }: { item: CartItem }) {
 						sizes="96px"
 					/>
 				) : (
-					<div className="flex h-full w-full items-center justify-center text-[9px] tracking-widest text-muted-foreground uppercase">
+					<div className="flex h-full w-full items-center justify-center text-eyebrow tracking-widest text-muted-foreground uppercase">
 						Sin imagen
 					</div>
 				)}
@@ -55,12 +55,12 @@ function CartRow({ item }: { item: CartItem }) {
 					<div className="min-w-0">
 						<Link
 							href={`/productos/${item.slug}`}
-							className="block truncate font-heading text-base font-light text-heading hover:text-primary"
+							className="block truncate font-heading text-base font-light text-heading hover:text-primary-strong"
 						>
 							{item.name}
 						</Link>
 						{item.sku && (
-							<p className="mt-0.5 font-body text-[10px] tracking-[0.15em] text-muted-foreground uppercase">
+							<p className="mt-0.5 font-body text-eyebrow tracking-label text-muted-foreground uppercase">
 								SKU: {item.sku}
 							</p>
 						)}
@@ -140,7 +140,7 @@ export function CartView() {
 			<section className="min-h-[60vh] bg-cream pt-32 pb-24 md:pt-40">
 				<div className="mx-auto max-w-3xl px-6 text-center lg:px-8">
 					<h1 className="mb-4 font-heading text-4xl font-light text-heading">
-						Tu carrito está <span className="italic text-primary">vacío</span>
+						Tu carrito está <span className="italic text-primary-strong">vacío</span>
 					</h1>
 					<p className="mb-10 font-body text-sm text-muted-foreground">
 						Explora nuestras colecciones y encuentra la pieza perfecta.
@@ -148,13 +148,13 @@ export function CartView() {
 					<div className="flex flex-col justify-center gap-3 sm:flex-row">
 						<Link
 							href="/shop"
-							className="inline-block bg-foreground px-10 py-4 font-body text-[11px] font-medium tracking-[0.2em] text-white uppercase transition-colors hover:bg-foreground/85"
+							className="inline-block bg-foreground px-10 py-4 font-body text-label font-medium tracking-label text-white uppercase transition-colors hover:bg-foreground/85"
 						>
 							Ver catálogo
 						</Link>
 						<Link
 							href="/categorias"
-							className="inline-block border border-foreground/40 px-10 py-4 font-body text-[11px] font-medium tracking-[0.2em] text-foreground uppercase transition-colors hover:bg-foreground/5"
+							className="inline-block border border-foreground/40 px-10 py-4 font-body text-label font-medium tracking-label text-foreground uppercase transition-colors hover:bg-foreground/5"
 						>
 							Ver categorías
 						</Link>
@@ -171,12 +171,12 @@ export function CartView() {
 			<div className="mx-auto max-w-3xl px-6 lg:px-8">
 				<div className="mb-8 flex items-center justify-between">
 					<h1 className="font-heading text-3xl font-light text-heading md:text-4xl">
-						Tu <span className="italic text-primary">carrito</span>
+						Tu <span className="italic text-primary-strong">carrito</span>
 					</h1>
 					<button
 						type="button"
 						onClick={clear}
-						className="cursor-pointer font-body text-[11px] tracking-[0.15em] text-muted-foreground uppercase transition-colors hover:text-destructive"
+						className="cursor-pointer font-body text-label tracking-label text-muted-foreground uppercase transition-colors hover:text-destructive"
 					>
 						Vaciar carrito
 					</button>
@@ -189,7 +189,7 @@ export function CartView() {
 				</div>
 
 				<div className="mt-8 flex items-center justify-between">
-					<p className="font-body text-sm tracking-[0.15em] text-muted-foreground uppercase">
+					<p className="font-body text-sm tracking-label text-muted-foreground uppercase">
 						Total
 					</p>
 					<p className="font-heading text-2xl font-light text-heading">
@@ -202,14 +202,14 @@ export function CartView() {
 						href={whatsappCartUrl(items)}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="flex items-center justify-center gap-2 bg-[#25D366] px-10 py-4 font-body text-[11px] font-medium tracking-[0.2em] text-white uppercase transition-colors duration-300 hover:bg-[#1EB85A]"
+						className="flex items-center justify-center gap-2 bg-[#25D366] px-10 py-4 font-body text-label font-medium tracking-label text-white uppercase transition-colors duration-300 hover:bg-[#1EB85A]"
 					>
 						<WhatsAppIcon size={16} />
 						Pedir todo por WhatsApp
 					</a>
 					<Link
 						href="/shop"
-						className="px-10 py-4 text-center font-body text-[11px] font-medium tracking-[0.2em] text-foreground uppercase transition-colors duration-300 border border-foreground/40 hover:bg-foreground/5"
+						className="px-10 py-4 text-center font-body text-label font-medium tracking-label text-foreground uppercase transition-colors duration-300 border border-foreground/40 hover:bg-foreground/5"
 					>
 						Seguir comprando
 					</Link>

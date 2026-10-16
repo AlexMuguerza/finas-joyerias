@@ -59,7 +59,7 @@ export default async function AdminDashboardPage() {
 							{stat.href ? (
 								<Link
 									href={stat.href}
-									className="font-heading text-3xl font-semibold text-foreground transition-colors hover:text-primary"
+									className="font-heading text-3xl font-semibold text-foreground transition-colors hover:text-primary-strong"
 								>
 									{stat.value}
 								</Link>
@@ -98,7 +98,7 @@ export default async function AdminDashboardPage() {
 										{" "}
 										<Link
 											href="/admin/productos"
-											className="text-primary hover:underline"
+											className="text-primary-strong hover:underline"
 										>
 											Productos
 										</Link>

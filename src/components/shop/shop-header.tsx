@@ -112,9 +112,9 @@ export function ShopHeader() {
 								href={link.href}
 								aria-current={isActive(link.href) ? "page" : undefined}
 								className={cn(
-									"font-body text-[11px] font-medium tracking-[0.15em] uppercase transition-colors duration-300",
+									"font-body text-label font-medium tracking-label uppercase transition-colors duration-300",
 									isActive(link.href)
-										? "text-primary"
+										? "text-primary-strong"
 										: "text-text-body hover:text-foreground"
 								)}
 							>
@@ -136,7 +136,7 @@ export function ShopHeader() {
 							onClick={() => setIsMenuOpen(true)}
 							aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}
 							aria-expanded={isMenuOpen}
-							className="flex h-11 w-11 cursor-pointer items-center justify-center text-foreground transition-colors duration-300 hover:text-primary"
+							className="flex h-11 w-11 cursor-pointer items-center justify-center text-foreground transition-colors duration-300 hover:text-primary-strong"
 						>
 							{/* Solo el icono de "hamburguesa": con el menú abierto el
 							    overlay (z-60) tapa el header, así que aquí nunca se ve

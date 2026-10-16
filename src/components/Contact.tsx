@@ -91,11 +91,11 @@ export const Contact = () => {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-center mb-20"
         >
-          <span className="font-body text-[10px] font-medium tracking-[0.3em] uppercase text-primary block mb-4">
+          <span className="font-body text-eyebrow font-medium tracking-eyebrow uppercase text-primary-strong block mb-4">
             Contáctanos
           </span>
           <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-heading mb-6">
-            Estamos <span className="italic text-primary">para ti</span>
+            Estamos <span className="italic text-primary-strong">para ti</span>
           </h2>
           <div className="w-16 h-px bg-gold mx-auto" />
         </motion.div>
@@ -198,11 +198,11 @@ export const Contact = () => {
                 }}
                 className="flex gap-6 group"
               >
-                <div className="w-14 h-14 bg-soft-pink flex items-center justify-center flex-shrink-0 group-hover:bg-primary transition-colors duration-300">
+                <div className="w-14 h-14 bg-soft-pink flex items-center justify-center flex-shrink-0 group-hover:bg-primary-strong transition-colors duration-300">
                   <info.icon
                     size={20}
                     strokeWidth={1.5}
-                    className="text-primary group-hover:text-white transition-colors duration-300"
+                    className="text-primary-strong group-hover:text-white transition-colors duration-300"
                   />
                 </div>
                 <div>
@@ -220,7 +220,7 @@ export const Contact = () => {
                             ? "noopener noreferrer"
                             : undefined
                         }
-                        className="block font-body text-sm text-text-body transition-colors duration-300 hover:text-primary"
+                        className="block font-body text-sm text-text-body transition-colors duration-300 hover:text-primary-strong"
                       >
                         {detail}
                       </a>
@@ -243,7 +243,7 @@ export const Contact = () => {
             >
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
-                  <MapPin size={32} strokeWidth={1} className="text-primary mx-auto mb-4" />
+                  <MapPin size={32} strokeWidth={1} className="text-primary-strong mx-auto mb-4" />
                   <p className="font-body text-sm text-text-body">
                     San Isidro, Lima - Perú
                   </p>

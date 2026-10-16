@@ -84,7 +84,7 @@ export const Hero = () => {
                 className="flex items-center justify-center gap-4 mb-8"
               >
                 <div className="w-12 h-px bg-gradient-to-r from-transparent to-heading/40" />
-                <span className="font-body text-[10px] font-medium tracking-[0.3em] uppercase text-heading/60">
+                <span className="font-body text-eyebrow font-medium tracking-eyebrow uppercase text-heading/60">
                   Colección Exclusiva 2025
                 </span>
                 <div className="w-12 h-px bg-gradient-to-l from-transparent to-heading/40" />
@@ -140,7 +140,7 @@ export const Hero = () => {
           >
             <Link
               href="/categorias"
-              className="inline-flex items-center justify-center px-10 py-4 bg-foreground text-white font-body text-[11px] font-medium tracking-[0.2em] uppercase hover:bg-foreground/90 transition-all duration-500 hover:shadow-lg hover:-translate-y-0.5"
+              className="inline-flex items-center justify-center px-10 py-4 bg-foreground text-white font-body text-label font-medium tracking-label uppercase hover:bg-foreground/90 transition-all duration-500 hover:shadow-lg hover:-translate-y-0.5"
             >
               Explorar Colección
             </Link>
@@ -151,7 +151,7 @@ export const Hero = () => {
                   el.scrollIntoView({ behavior: "smooth", block: "start" });
                 }
               }}
-              className="px-10 py-4 border border-foreground/40 text-foreground font-body text-[11px] font-medium tracking-[0.2em] uppercase hover:bg-foreground/10 transition-all duration-500 cursor-pointer"
+              className="px-10 py-4 border border-foreground/40 text-foreground font-body text-label font-medium tracking-label uppercase hover:bg-foreground/10 transition-all duration-500 cursor-pointer"
             >
               Nuestra Historia
             </button>
@@ -170,7 +170,7 @@ export const Hero = () => {
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             className="flex flex-col items-center gap-3"
           >
-            <span className="font-body text-[9px] tracking-[0.3em] uppercase text-heading/50">
+            <span className="font-body text-eyebrow tracking-eyebrow uppercase text-heading/50">
               Scroll
             </span>
             <div className="w-px h-8 bg-gradient-to-b from-heading/50 to-transparent" />

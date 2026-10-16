@@ -80,11 +80,11 @@ export default async function ShopPage({
 			{/* Header del catálogo */}
 			<section className="bg-cream pt-20 pb-10 md:pt-36">
 				<div className="mx-auto max-w-7xl px-6 text-center lg:px-8">
-					<span className="mb-4 block font-body text-[10px] font-medium tracking-[0.3em] text-primary uppercase">
+					<span className="mb-4 block font-body text-eyebrow font-medium tracking-eyebrow text-primary-strong uppercase">
 						Joyería Fina
 					</span>
 					<h1 className="font-heading text-4xl font-light text-heading md:text-5xl">
-						Nuestro <span className="italic text-primary">catálogo</span>
+						Nuestro <span className="italic text-primary-strong">catálogo</span>
 					</h1>
 					<p className="mx-auto mt-4 max-w-xl font-body text-sm text-text-body">
 						Cada pieza es diseñada con pasión y creada con los

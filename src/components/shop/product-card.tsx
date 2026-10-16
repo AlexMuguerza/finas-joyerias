@@ -41,7 +41,7 @@ export function ProductCard({ product }: { product: ShopProduct }) {
 				</Link>
 
 				{product.isNew && (
-					<span className="absolute top-4 left-4 bg-primary px-3 py-1 font-body text-[9px] font-medium tracking-[0.15em] text-white uppercase">
+					<span className="absolute top-4 left-4 bg-primary-strong px-3 py-1.5 font-body text-eyebrow font-medium tracking-label text-white uppercase">
 						Nuevo
 					</span>
 				)}
@@ -49,17 +49,17 @@ export function ProductCard({ product }: { product: ShopProduct }) {
 
 			<div className="text-center">
 				{product.categoryName && (
-					<span className="mb-2 block font-body text-[10px] font-medium tracking-[0.2em] text-primary uppercase">
+					<span className="mb-2 block font-body text-eyebrow font-medium tracking-label text-primary-strong uppercase">
 						{product.categoryName}
 					</span>
 				)}
 				<Link href={`/productos/${product.slug}`}>
-					<h3 className="mb-2 font-heading text-xl font-light text-heading transition-colors duration-300 hover:text-primary">
+					<h3 className="mb-2 font-heading text-xl font-light text-heading transition-colors duration-300 hover:text-primary-strong">
 						{product.name}
 				</h3>
 				</Link>
 				{product.sku && (
-					<p className="mb-1 font-body text-[10px] tracking-[0.15em] text-muted-foreground uppercase">
+					<p className="mb-1 font-body text-eyebrow tracking-label text-muted-foreground uppercase">
 						SKU: {product.sku}
 					</p>
 				)}

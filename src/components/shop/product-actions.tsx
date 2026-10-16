@@ -80,7 +80,7 @@ export function ProductActions({
 				<button
 					type="button"
 					onClick={handleAdd}
-					className="cursor-pointer bg-foreground px-10 py-4 font-body text-[11px] font-medium tracking-[0.2em] text-white uppercase transition-colors duration-300 hover:bg-foreground/85"
+					className="cursor-pointer bg-foreground px-10 py-4 font-body text-label font-medium tracking-label text-white uppercase transition-colors duration-300 hover:bg-foreground/85"
 				>
 					{added ? "✓ Agregado al carrito" : "Agregar al carrito"}
 				</button>
@@ -88,7 +88,7 @@ export function ProductActions({
 					href={whatsappProductUrl(product)}
 					target="_blank"
 					rel="noopener noreferrer"
-					className="flex items-center justify-center gap-2 border border-[#25D366]/60 px-10 py-4 font-body text-[11px] font-medium tracking-[0.2em] uppercase transition-colors duration-300 text-[#128C4A] hover:bg-[#25D366]/10"
+					className="flex items-center justify-center gap-2 border border-[#25D366]/60 px-10 py-4 font-body text-label font-medium tracking-label uppercase transition-colors duration-300 text-[#128C4A] hover:bg-[#25D366]/10"
 				>
 					<WhatsAppIcon size={16} />
 					Pedir por WhatsApp
@@ -108,8 +108,8 @@ export function ProductActions({
 				className={cn(
 					"flex h-9 w-9 cursor-pointer items-center justify-center transition-all duration-300",
 					added
-						? "bg-primary text-white"
-						: "bg-white/95 text-foreground hover:bg-primary hover:text-white"
+						? "bg-primary-strong text-white"
+						: "bg-white/95 text-foreground hover:bg-primary-strong hover:text-white"
 				)}
 			>
 				<ShoppingBag size={15} strokeWidth={1.5} />

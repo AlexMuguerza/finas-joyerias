@@ -40,7 +40,7 @@ export const Categories = ({
 						initial={{ opacity: 0, y: 20 }}
 						animate={isInView ? { opacity: 1, y: 0 } : {}}
 						transition={{ delay: 0.2, duration: 0.6 }}
-						className="font-body text-[10px] font-medium tracking-[0.3em] uppercase text-primary block mb-4"
+						className="font-body text-eyebrow font-medium tracking-eyebrow uppercase text-primary-strong block mb-4"
 					>
 						Nuestras Colecciones
 					</motion.span>
@@ -50,7 +50,7 @@ export const Categories = ({
 						transition={{ delay: 0.3, duration: 0.8 }}
 						className="font-heading text-4xl md:text-5xl lg:text-6xl font-light text-heading mb-6"
 					>
-						Encuentra tu <span className="italic text-primary">estilo</span>
+						Encuentra tu <span className="italic text-primary-strong">estilo</span>
 					</motion.h2>
 					<motion.div
 						initial={{ scaleX: 0 }}
@@ -124,7 +124,7 @@ const CategoryCard = ({ category }: { category: LandingCategory }) => {
 					sizes="(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 92vw"
 				/>
 			) : (
-				<div className="absolute inset-0 flex items-center justify-center font-heading text-6xl font-light text-primary">
+				<div className="absolute inset-0 flex items-center justify-center font-heading text-6xl font-light text-primary-strong">
 					{category.name.charAt(0)}
 				</div>
 			)}
@@ -135,7 +135,7 @@ const CategoryCard = ({ category }: { category: LandingCategory }) => {
 			{/* Content */}
 			<div className="absolute inset-0 flex flex-col justify-end p-8">
 				<div className="transform transition-all duration-500 group-hover:-translate-y-2">
-					<span className="font-body text-[10px] font-medium tracking-[0.2em] uppercase text-white/70 block mb-2">
+					<span className="font-body text-eyebrow font-medium tracking-label uppercase text-white/70 block mb-2">
 						{category.productCount === 1
 							? "1 pieza"
 							: `${category.productCount} piezas`}
@@ -143,11 +143,14 @@ const CategoryCard = ({ category }: { category: LandingCategory }) => {
 					<h3 className="font-heading text-3xl md:text-4xl font-light text-white mb-3">
 						{category.name}
 					</h3>
-					<div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-4 group-hover:translate-y-0">
-						<span className="font-body text-[10px] font-medium tracking-[0.2em] uppercase text-white/90">
+					{/* Visible siempre en táctil y con teclado; solo se descubre al pasar el
+				    ratón en escritorio. Antes era `group-hover:` a secas, así que
+				    en un móvil la fila "Explorar" no aparecía nunca. */}
+					<div className="flex items-center gap-3 opacity-100 transition-all duration-500 lg:translate-y-4 lg:opacity-0 lg:group-hover:translate-y-0 lg:group-hover:opacity-100 lg:group-focus-within:translate-y-0 lg:group-focus-within:opacity-100">
+						<span className="font-body text-eyebrow font-medium tracking-label uppercase text-white/90">
 							Explorar
 						</span>
-						<svg width="24" height="1" viewBox="0 0 24 1" className="text-white/50">
+						<svg width="24" height="1" viewBox="0 0 24 1" aria-hidden="true" className="text-white/50">
 							<line x1="0" y1="0.5" x2="24" y2="0.5" stroke="currentColor" strokeWidth="1" />
 						</svg>
 						<svg
@@ -155,7 +158,8 @@ const CategoryCard = ({ category }: { category: LandingCategory }) => {
 							height="12"
 							viewBox="0 0 12 12"
 							fill="none"
-							className="text-white/70 transform group-hover:translate-x-1 transition-transform duration-300"
+							aria-hidden="true"
+							className="text-white/70 transition-transform duration-300 group-hover:translate-x-1"
 						>
 							<path
 								d="M1 6H11M11 6L6 1M11 6L6 11"
